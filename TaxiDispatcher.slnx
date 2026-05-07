@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="Domain/TaxiDispatcher.Domain.csproj" />
+  <Project Path="BusinessLogic/BusinessLogic.csproj" Id="96b67f88-972a-4a75-84f3-ea0082954f99" />
+  <Project Path="Domain/Domain.csproj" />
+  <Project Path="Infrestracture/Infrastructure.csproj" Id="0ae1e59f-6d78-4578-a189-e0ca13bd1791" />
+  <Project Path="UI/UI.csproj" Id="2a6fde70-2f62-48d4-b899-ed69025ef374" />
 </Solution>

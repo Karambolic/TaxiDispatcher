@@ -1,24 +1,25 @@
-﻿namespace TaxiDispatcher.Domain.Entities
+﻿namespace Domain.Entities
 {
     public enum DriverStatus
     {
-        Free = 0,
-        Busy = 1,
-        Offline = 2
+        Free = 1,
+        Busy = 2,
+        Offline = 3,
+        Suspended = 4
     }
 
     public enum OrderStatus
     {
-        New = 0,
-        InWork = 1,
-        Canceled = 2,
-        Finished = 3
+        New = 1,
+        InWork = 2,
+        Canceled = 3,
+        Finished = 4
     }
 
     public enum TransactionType
     {
-        OrderPaymentByClient = 0,
-        DriverPayment = 1,
-        DriverFine = 2
+        OrderPaymentByClient = 1,
+        DriverPayment = 2,
+        DriverFine = 3
     }
 }

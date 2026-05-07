@@ -1,4 +1,4 @@
-﻿namespace TaxiDispatcher.Domain.Entities
+﻿namespace Domain.Entities
 {
     public class Client : Person
     {

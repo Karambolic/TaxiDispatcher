@@ -1,4 +1,4 @@
-﻿namespace TaxiDispatcher.Domain.Entities
+﻿namespace Domain.Entities
 {
     public class Order
     {
@@ -6,6 +6,7 @@
         public Client Client {  get; set; }
         public Dispatcher Dispatcher { get; set; }
         public Driver Driver { get; set; }
+        public Tariff Tariff { get; set; }
         public Address AddressStart { get; set; }
         public Address AddressEnd { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -18,7 +19,7 @@
         public decimal FinalPrice { get; set; }
         public Order() { }
 
-        public Order(Client client, Dispatcher dispatcher, Driver driver, Address addressStart, 
+        public Order(Client client, Dispatcher dispatcher, Driver driver, Tariff tariff,Address addressStart, 
             Address addressEnd, string comment, int passengerCount, float finalDistanceKm,
             decimal finalPrice, OrderStatus status = OrderStatus.New, int id = 0,
             DateTime? startedAt = null, DateTime? finishedAt = null)
@@ -27,6 +28,7 @@
             this.Client = client;
             this.Dispatcher = dispatcher;
             this.Driver = driver;
+            this.Tariff = tariff;
             this.AddressStart = addressStart;
             this.AddressEnd = addressEnd;
             this.CreatedAt = DateTime.UtcNow;
