@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.DTO;
+using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.Data.SqlClient;
 
@@ -18,7 +19,7 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
             (@clId, @dispId, @drId, @addrS, @addrE, @status, @created, @pass, @dist, @price, @cmt);
             SELECT SCOPE_IDENTITY();";
 
-        using var cmd = new SqlCommand(sql, connection);
+        using var cmd = new SqlCommand(sql, (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@clId", order.Client.Id);
         cmd.Parameters.AddWithValue("@dispId", order.Dispatcher.Id);
         cmd.Parameters.AddWithValue("@drId", (object?)order.Driver?.Id ?? DBNull.Value);
@@ -48,7 +49,7 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
             LEFT JOIN Drivers d ON o.DriverId = d.Id
             WHERE o.Id = @id";
 
-        using var cmd = new SqlCommand(sql, connection);
+        using var cmd = new SqlCommand(sql, (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
 
         using var reader = cmd.ExecuteReader();
@@ -70,7 +71,7 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
             LEFT JOIN Drivers d ON o.DriverId = d.Id
             ORDER BY o.CreatedAt DESC";
 
-        using var cmd = new SqlCommand(sql, connection);
+        using var cmd = new SqlCommand(sql, (SqlConnection)connection);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -93,7 +94,7 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
                 FinishedAt = @finished
             WHERE Id = @id";
 
-        using var cmd = new SqlCommand(sql, connection);
+        using var cmd = new SqlCommand(sql, (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", entity.Id);
         cmd.Parameters.AddWithValue("@drId", (object?)entity.Driver?.Id ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@status", (int)entity.Status);
@@ -108,12 +109,72 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("DELETE FROM Orders WHERE Id = @id", connection);
+        using var cmd = new SqlCommand("DELETE FROM Orders WHERE Id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
         return cmd.ExecuteNonQuery() > 0;
     }
 
-    private Order MapReaderToOrder(SqlDataReader reader)
+    /// <summary>
+    /// Get all the order with status New or Inwork i.e. all the orders that are not finished or canceled
+    /// </summary>
+    /// <returns></returns>
+    public List<Order> GetActiveOrders()
+    {
+        var list = new List<Order>();
+        using var connection = (SqlConnection)connectionFactory.CreateConnection();
+        connection.Open();
+
+        // 
+        const string sql = @"
+            SELECT o.*, 
+                   c.FirstName as ClFN, c.LastName as ClLN, c.PhoneNumber as ClPh,
+                   d.FirstName as DrFN, d.LastName as DrLN, d.PhoneNumber as DrPh, d.Status as DrStatus
+            FROM Orders o
+            JOIN Clients c ON o.ClientId = c.Id
+            LEFT JOIN Drivers d ON o.DriverId = d.Id
+            WHERE o.Status NOT IN (@finished, @canceled)
+            ORDER BY o.CreatedAt DESC";
+
+        using var cmd = new SqlCommand(sql, connection);
+        // Cast  enum values to int for the SQL query
+        cmd.Parameters.AddWithValue("@finished", (int)OrderStatus.Finished);
+        cmd.Parameters.AddWithValue("@canceled", (int)OrderStatus.Canceled);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(MapReaderToOrder(reader));
+        }
+        return list;
+    }
+
+    public List<Order> GetOrdersByClientId(int clientId)
+    {
+        var list = new List<Order>();
+        using var connection = (SqlConnection)connectionFactory.CreateConnection();
+        connection.Open();
+
+        const string sql = @"
+            SELECT o.*, 
+                   c.FirstName as ClFN, c.LastName as ClLN, c.PhoneNumber as ClPh,
+                   d.FirstName as DrFN, d.LastName as DrLN, d.PhoneNumber as DrPh, d.Status as DrStatus
+            FROM Orders o
+            JOIN Clients c ON o.ClientId = c.Id
+            LEFT JOIN Drivers d ON o.DriverId = d.Id
+            WHERE o.ClientId = @clientId
+            ORDER BY o.CreatedAt DESC";
+
+        using var cmd = new SqlCommand(sql, connection);
+        cmd.Parameters.AddWithValue("@clientId", clientId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(MapReaderToOrder(reader));
+        }
+        return list;
+    }
+    static private Order MapReaderToOrder(SqlDataReader reader)
     {
         var client = new Client((string)reader["ClFN"], (string)reader["ClLN"], (string)reader["ClPh"], (int)reader["ClientId"]);
 
@@ -155,5 +216,29 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
             Comment = reader["Comment"]?.ToString() ?? string.Empty
         };
     }
-}
+
+    // Query 6.3 - Orders within a specific date range
+    public List<OrderPeriodReport> GetOrdersByPeriod(DateTime start, DateTime end)
+    {
+        var list = new List<OrderPeriodReport>();
+        using var conn = (SqlConnection)connectionFactory.CreateConnection();
+        conn.Open();
+        string sql = "SELECT id, createdAt, finalPrice FROM [Order] WHERE createdAt BETWEEN @start AND @end";
+
+        using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@start", start);
+        cmd.Parameters.AddWithValue("@end", end);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(new OrderPeriodReport
+            {
+                Id = (int)reader["id"],
+                CreatedAt = (DateTime)reader["createdAt"],
+                FinalPrice = (decimal)reader["finalPrice"]
+            });
+        }
+        return list;
+    }
 }

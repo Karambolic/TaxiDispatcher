@@ -16,7 +16,7 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
             VALUES (@fn, @ln, @ph); 
             SELECT SCOPE_IDENTITY();";
 
-        using var cmd = new SqlCommand(sql, connection);
+        using var cmd = new SqlCommand(sql, (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@fn", client.FirstName);
         cmd.Parameters.AddWithValue("@ln", client.LastName);
         cmd.Parameters.AddWithValue("@ph", client.PhoneNumber);
@@ -29,7 +29,7 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Clients WHERE Id = @id", connection);
+        using var cmd = new SqlCommand("SELECT * FROM Clients WHERE Id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
 
         using var reader = cmd.ExecuteReader();
@@ -41,7 +41,7 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Clients WHERE PhoneNumber = @phone", connection);
+        using var cmd = new SqlCommand("SELECT * FROM Clients WHERE PhoneNumber = @phone", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@phone", phone);
 
         using var reader = cmd.ExecuteReader();
@@ -54,7 +54,7 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Clients", connection);
+        using var cmd = new SqlCommand("SELECT * FROM Clients", (SqlConnection)connection);
         using var reader = cmd.ExecuteReader();
 
         while (reader.Read())
@@ -75,7 +75,7 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
             SET FirstName = @fn, LastName = @ln, PhoneNumber = @ph 
             WHERE Id = @id";
 
-        using var cmd = new SqlCommand(sql, connection);
+        using var cmd = new SqlCommand(sql, (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", entity.Id);
         cmd.Parameters.AddWithValue("@fn", entity.FirstName);
         cmd.Parameters.AddWithValue("@ln", entity.LastName);
@@ -89,14 +89,14 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("DELETE FROM Clients WHERE Id = @id", connection);
+        using var cmd = new SqlCommand("DELETE FROM Clients WHERE Id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
 
         return cmd.ExecuteNonQuery() > 0;
     }
 
     // To avoid code duplication
-    private Client MapReaderToClient(SqlDataReader reader)
+    static private Client MapReaderToClient(SqlDataReader reader)
     {
         return new Client(
             (string)reader["FirstName"],
@@ -104,5 +104,33 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
             (string)reader["PhoneNumber"],
             (int)reader["Id"]
         );
+    }
+
+    // Query 6.2 - Find clients by phone mask
+    public List<Client> GetClientsByPhoneMask(string mask)
+    {
+        var list = new List<Client>();
+        using var conn = connectionFactory.CreateConnection();
+        conn.Open();
+        // Using @mask parameter for safety
+        using var cmd = new SqlCommand("SELECT firstName, lastName, phoneNumber, id FROM [Client] WHERE phoneNumber LIKE @mask", (SqlConnection)conn);
+        cmd.Parameters.AddWithValue("@mask", mask + "%");
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(new Client((string)reader["FirstName"], (string)reader["LastName"], (string)reader["PhoneNumber"], (int)reader["Id"]));
+        }
+        return list;
+    }
+
+    // Query 6.4 - Total count of clients
+    public int GetTotalClientsCount()
+    {
+        using var conn = connectionFactory.CreateConnection();
+        conn.Open();
+        using var cmd = new SqlCommand("SELECT COUNT(*) FROM [Client]", (SqlConnection)conn);
+        
+        return (int)cmd.ExecuteScalar();
     }
 }

@@ -11,7 +11,7 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
         const string sql = "INSERT INTO Dispatchers (FirstName, LastName, PhoneNumber) VALUES (@fn, @ln, @ph); SELECT SCOPE_IDENTITY();";
-        using var cmd = new SqlCommand(sql, connection);
+        using var cmd = new SqlCommand(sql, (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@fn", entity.FirstName);
         cmd.Parameters.AddWithValue("@ln", entity.LastName);
         cmd.Parameters.AddWithValue("@ph", entity.PhoneNumber);
@@ -22,7 +22,7 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("SELECT * FROM Dispatchers WHERE PhoneNumber = @phone", connection);
+        using var cmd = new SqlCommand("SELECT * FROM Dispatchers WHERE PhoneNumber = @phone", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@phone", phone);
         using var reader = cmd.ExecuteReader();
 
@@ -36,7 +36,7 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("SELECT * FROM Dispatchers WHERE Id = @id", connection);
+        using var cmd = new SqlCommand("SELECT * FROM Dispatchers WHERE Id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
         using var reader = cmd.ExecuteReader();
 
@@ -51,7 +51,7 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
         const string sql = "UPDATE Dispatchers SET FirstName = @fn, LastName = @ln, PhoneNumber = @ph WHERE Id = @id";
-        using var cmd = new SqlCommand(sql, connection);
+        using var cmd = new SqlCommand(sql, (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", entity.Id);
         cmd.Parameters.AddWithValue("@fn", entity.FirstName);
         cmd.Parameters.AddWithValue("@ln", entity.LastName);
@@ -64,7 +64,7 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
         var list = new List<Dispatcher>();
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("SELECT * FROM Dispatchers", connection);
+        using var cmd = new SqlCommand("SELECT * FROM Dispatchers", (SqlConnection)connection);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
             list.Add(new Dispatcher((string)reader["FirstName"], (string)reader["LastName"], (string)reader["PhoneNumber"], (int)reader["Id"]));
@@ -75,18 +75,22 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("DELETE FROM Dispatchers WHERE Id = @id", connection);
+        using var cmd = new SqlCommand("DELETE FROM Dispatchers WHERE Id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
         return cmd.ExecuteNonQuery() > 0;
     }
 
-    // This method retrieves the password hash for a given login from the Credentials table
+    /// <summary>
+    /// Retrieves the hashed password for a dispatcher based on their login
+    /// </summary>
+    /// <param name="login">The login of the dispatcher</param>
+    /// <returns>The hashed password of the dispatcher if found; otherwise, null</returns>
     public string? GetHashedPasswordByLogin(string login)
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT PasswordHashed FROM Credentials WHERE Login = @login", connection);
+        using var cmd = new SqlCommand("SELECT PasswordHashed FROM Credentials WHERE Login = @login", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@login", login);
 
         var result = cmd.ExecuteScalar();
@@ -98,7 +102,7 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("SELECT d.* FROM Dispatchers d JOIN Credentials c ON d.Id = c.DispatcherId WHERE c.Login = @login", connection);
+        using var cmd = new SqlCommand("SELECT d.* FROM Dispatchers d JOIN Credentials c ON d.Id = c.DispatcherId WHERE c.Login = @login", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@login", login);
         using var reader = cmd.ExecuteReader();
         if (reader.Read())

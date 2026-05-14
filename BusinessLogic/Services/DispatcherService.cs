@@ -12,35 +12,29 @@ public class DispatcherService(UnitOfWork uow)
     public Dispatcher? CurrentDispatcher { get; private set; }
 
     /// <summary>
-    /// Attempts to authenticate a dispatcher using the specified phone number and password
+    /// Attempts to authenticate a dispatcher using the specified login and password
     /// </summary>
     /// <remarks>If authentication succeeds, the current dispatcher context is updated. The method does not
     /// throw an exception for invalid credentials</remarks>
-    /// <param name="phone">The phone number associated with the dispatcher account to authenticate. Cannot be null or empty.</param>
+    /// <param name="login">The login associated with the dispatcher account to authenticate. Cannot be null or empty.</param>
     /// <param name="password">The password to verify for the dispatcher account. Cannot be null or empty.</param>
     /// <returns>true if authentication is successful and the dispatcher is logged in; otherwise, false.</returns>
     public bool Login(string login, string password)
     {
-        // Get hashed password from the database for the given login or null if no matches found/Login not found
+        // Get the hash via the login string
         string? storedHash = uow.Dispatchers.GetHashedPasswordByLogin(login);
 
-        // If the login does not exist in the database, return false
-        if (storedHash == null)
-        {
+        if (storedHash == null) 
             return false;
-        }
 
-        // Login exists, verify the provided password against the stored hash
-        if (!PasswordHasher.VerifyPassword(password, storedHash))
-        {
+        // Check if the provided password matches the hash
+        if (!PasswordHasher.VerifyPassword(password, storedHash)) 
             return false;
-        }
 
-        // If password accepted, download the dispatcher data for the current session
-        // (without password, just profile: name etc.)
+        // Fetch the full Dispatcher if login and password are correct
         CurrentDispatcher = uow.Dispatchers.GetByLogin(login);
 
-        return true;
+        return CurrentDispatcher != null;
     }
 
     public void Logout()

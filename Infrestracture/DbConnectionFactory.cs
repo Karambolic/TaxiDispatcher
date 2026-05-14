@@ -1,8 +1,17 @@
 ﻿using Microsoft.Data.SqlClient;
+using System.Data;
 
-namespace Infrastructure;
-
-public class DbConnectionFactory(string connectionString)
+public class DbConnectionFactory
 {
-    public SqlConnection CreateConnection() => new SqlConnection(connectionString);
+    private readonly string _connectionString;
+
+    public DbConnectionFactory(string connectionString)
+    {
+        _connectionString = connectionString;
+    }
+
+    public IDbConnection CreateConnection()
+    {
+        return new SqlConnection(_connectionString);
+    }
 }

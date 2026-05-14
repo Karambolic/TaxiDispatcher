@@ -11,7 +11,7 @@ public class AddressRepository(DbConnectionFactory connectionFactory) : IReposit
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
         const string query = "INSERT INTO Addresses (StreetName, StreetNumber) VALUES (@name, @num); SELECT SCOPE_IDENTITY();";
-        using var cmd = new SqlCommand(query, connection);
+        using var cmd = new SqlCommand(query, (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@name", address.StreetName);
         cmd.Parameters.AddWithValue("@num", address.StreetNumber);
         address.Id = Convert.ToInt32(cmd.ExecuteScalar());
@@ -22,7 +22,7 @@ public class AddressRepository(DbConnectionFactory connectionFactory) : IReposit
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
         const string sql = "UPDATE Addresses SET StreetName = @name, StreetNumber = @num WHERE Id = @id";
-        using var cmd = new SqlCommand(sql, connection);
+        using var cmd = new SqlCommand(sql, (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", address.Id);
         cmd.Parameters.AddWithValue("@name", address.StreetName);
         cmd.Parameters.AddWithValue("@num", address.StreetNumber);
@@ -33,7 +33,7 @@ public class AddressRepository(DbConnectionFactory connectionFactory) : IReposit
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("SELECT * FROM Addresses WHERE Id = @id", connection);
+        using var cmd = new SqlCommand("SELECT * FROM Addresses WHERE Id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
         using var reader = cmd.ExecuteReader();
         return reader.Read() ? new Address((string)reader["StreetName"], (string)reader["StreetNumber"], (int)reader["Id"]) : null;
@@ -44,7 +44,7 @@ public class AddressRepository(DbConnectionFactory connectionFactory) : IReposit
         var list = new List<Address>();
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("SELECT * FROM Addresses", connection);
+        using var cmd = new SqlCommand("SELECT * FROM Addresses", (SqlConnection)connection);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
             list.Add(new Address((string)reader["StreetName"], (string)reader["StreetNumber"], (int)reader["Id"]));
@@ -55,7 +55,7 @@ public class AddressRepository(DbConnectionFactory connectionFactory) : IReposit
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("DELETE FROM Addresses WHERE Id = @id", connection);
+        using var cmd = new SqlCommand("DELETE FROM Addresses WHERE Id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
         return cmd.ExecuteNonQuery() > 0;
     }

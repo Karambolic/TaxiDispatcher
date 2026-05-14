@@ -1,0 +1,127 @@
+﻿<Window x:Class="UI.Views.CreateOrderWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="New Taxi Order" Height="580" Width="450"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F4F7F9">
+
+    <Window.Resources>
+        <Style TargetType="Label">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,10,0,0"/>
+            <Setter Property="Foreground" Value="#333"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="5,0"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="CREATE NEW ORDER" FontSize="20" FontWeight="Bold" 
+                       Foreground="DarkOliveGreen" Margin="0,0,0,20"/>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="0,0,10,0">
+                    <GroupBox Header="Client Information" Padding="10">
+                        <StackPanel>
+                            <Label Content="Phone Number *"/>
+                            <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <Grid Margin="0,5,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,5,0">
+                                    <Label Content="First Name"/>
+                                    <TextBox Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                                <StackPanel Margin="5,0,0,0">
+                                    <Label Content="Last Name"/>
+                                    <TextBox Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="Route Details" Padding="10" Margin="0,15,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Pickup Address (Street / House No.) *" FontWeight="Bold" FontSize="11" Foreground="#555"/>
+                            <Grid Margin="0,2,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding StartStreet, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0"/>
+                                <TextBox Grid.Column="1" Text="{Binding StartNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+
+                            <TextBlock Text="Destination Address (Street / House No.) *" FontWeight="Bold" FontSize="11" Foreground="#555"/>
+                            <Grid Margin="0,2,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding EndStreet, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0"/>
+                                <TextBox Grid.Column="1" Text="{Binding EndNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="Order Options" Padding="10" Margin="0,15,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Label Content="Tariff *" Grid.Row="0" Grid.Column="0"/>
+                            <ComboBox Grid.Row="1" Grid.Column="0" Margin="0,0,5,0"
+                                      ItemsSource="{Binding AvailableTariffs}"
+                                      SelectedItem="{Binding SelectedTariff}"
+                                      DisplayMemberPath="Name"/>
+
+                            <Label Content="Passengers" Grid.Row="0" Grid.Column="1"/>
+                            <ComboBox Grid.Row="1" Grid.Column="1" Margin="5,0,0,0"
+                                      SelectedValue="{Binding PassengersCount}"
+                                      SelectedValuePath="Content">
+                                <ComboBoxItem Content="1" IsSelected="True"/>
+                                <ComboBoxItem Content="2"/>
+                                <ComboBoxItem Content="3"/>
+                                <ComboBoxItem Content="4"/>
+                            </ComboBox>
+
+                            <Label Content="Commentary" Grid.Row="2" Grid.ColumnSpan="2"/>
+                            <TextBox Grid.Row="3" Grid.ColumnSpan="2" Height="50" 
+                                     TextWrapping="Wrap" AcceptsReturn="True"
+                                     Text="{Binding Commentary, UpdateSourceTrigger=PropertyChanged}"/>
+                        </Grid>
+                    </GroupBox>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Content="Cancel" Width="80" Height="30" Background="IndianRed" Margin="0,0,10,0"
+                        Command="{Binding CancelCommand}"/>
+                <Button Content="Save Order" Width="100" Height="30" Background="YellowGreen" FontWeight="Bold"
+                        Command="{Binding SaveCommand}"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

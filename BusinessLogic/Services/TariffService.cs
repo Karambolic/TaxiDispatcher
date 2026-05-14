@@ -26,10 +26,12 @@ public class TariffService(UnitOfWork unitOfWork)
     /// </summary>
     public bool UpdateTariffPrice(int tariffId, decimal newPrice)
     {
-        if (newPrice < 0) return false;
+        if (newPrice < 0)
+            return false;
 
         var tariff = unitOfWork.Tariffs.GetById(tariffId);
-        if (tariff == null) return false;
+        if (tariff == null)
+            return false;
 
         tariff.PricePerKm = newPrice;
         return unitOfWork.Tariffs.Update(tariff);

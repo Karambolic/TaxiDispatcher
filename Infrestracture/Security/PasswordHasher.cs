@@ -12,6 +12,12 @@ namespace Infrastructure.Security
             return Convert.ToHexString(hashBytes);
         }
 
+        /// <summary>
+        /// Compares a plain text password with a hashed password by hashing the input password and checking for a match.
+        /// </summary>
+        /// <param name="password">The plain text password to verify.</param>
+        /// <param name="hashedPassword">The hashed password to compare against.</param>
+        /// <returns>true if the password matches the hashed password; otherwise, false.</returns>
         public static bool VerifyPassword(string password, string hashedPassword)
         {
             string hashOfInput = HashPassword(password);

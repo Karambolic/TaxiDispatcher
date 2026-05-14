@@ -1,4 +1,4 @@
-﻿using System.Windows;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -8,16 +8,16 @@ public abstract class ViewModelBase : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    // Метод, який сповіщає UI про зміни
+    // Notify the UI that a property value has changed
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    // Допоміжний метод для оновлення значень властивостей
+    // Check if the value is new, update the backing field and raise PropertyChanged
     protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
     {
-        if (Equals(storage, value)) return false;
+        if (EqualityComparer<T>.Default.Equals(storage, value)) return false;
         storage = value;
         OnPropertyChanged(propertyName);
         return true;

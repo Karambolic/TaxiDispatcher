@@ -8,7 +8,7 @@ public class TransactionRepository(DbConnectionFactory connectionFactory) : IRep
 {
     public void Add(Transaction entity)
     {
-        using var connection = connectionFactory.CreateConnection();
+        using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
         const string sql = @"
             INSERT INTO Transactions (TransactionType, DriverId, ClientId, Amount, Comment, Timestamp)
@@ -28,7 +28,7 @@ public class TransactionRepository(DbConnectionFactory connectionFactory) : IRep
 
     public Transaction? GetById(int id)
     {
-        using var connection = connectionFactory.CreateConnection();
+        using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
         using var cmd = new SqlCommand("SELECT * FROM Transactions WHERE Id = @id", connection);
         cmd.Parameters.AddWithValue("@id", id);
@@ -40,7 +40,7 @@ public class TransactionRepository(DbConnectionFactory connectionFactory) : IRep
     public List<Transaction> GetAll()
     {
         var list = new List<Transaction>();
-        using var connection = connectionFactory.CreateConnection();
+        using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
         using var cmd = new SqlCommand("SELECT * FROM Transactions ORDER BY Timestamp DESC", connection);

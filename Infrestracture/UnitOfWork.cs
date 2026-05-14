@@ -6,7 +6,7 @@ namespace Infrastructure;
 
 public class UnitOfWork(DbConnectionFactory factory)
 {
-    // private fields for lazy loading 
+    // Private fields for lazy loading 
     private IOrderRepository? _orders;
     private IClientRepository? _clients;
     private IDriverRepository? _drivers;
@@ -16,7 +16,7 @@ public class UnitOfWork(DbConnectionFactory factory)
     private IRepository<Automobile>? _automobiles;
     private IDispatcherRepository? _dispatchers;
 
-    // Properties to access the repositories, initializing in the lazy way (upon real need - when called)
+    // Publi properties to access the repositories, initialized in the lazy way (upon real need - when called)
     public IOrderRepository Orders => _orders ??= new OrderRepository(factory);
 
     public IClientRepository Clients => _clients ??= new ClientRepository(factory);

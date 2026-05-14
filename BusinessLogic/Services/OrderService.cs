@@ -40,9 +40,10 @@ public class OrderService(UnitOfWork uow)
     /// </summary>
     public bool UpdateOrderDetails(Order order)
     {
-        if (order == null || order.Id <= 0) return false;
+        if (order == null || order.Id <= 0)
+            return false;
 
-        // recalculate distance and price if addresses or tariff have changed
+        // Recalculate distance and price if addresses or tariff have changed
         order.FinalDistanceKm = EstimateDistance(order.AddressStart, order.AddressEnd);
         order.FinalPrice = CalculatePrice(order.FinalDistanceKm, order.Tariff);
 
@@ -87,7 +88,7 @@ public class OrderService(UnitOfWork uow)
         var transaction = new Transaction
         {
             TransactionType = TransactionType.OrderPaymentByClient,
-            DriverId = order.Driver?.Id ?? 0,
+            DriverId = null,
             ClientId = order.Client.Id,
             Amount = order.FinalPrice,
             Comment = $"Payment for order #{order.Id}",
@@ -100,9 +101,9 @@ public class OrderService(UnitOfWork uow)
     }
 
     /// <summary>
-    /// Get all active orders (status = New or InWork)
+    /// Get all active orders (status New or InWork)
     /// </summary>
-    /// <returns></returns>
+    /// <returns>List of active orders</returns>
     public List<Order> GetActiveOrders()
     {
         return uow.Orders.GetAll()
@@ -111,17 +112,18 @@ public class OrderService(UnitOfWork uow)
     }
 
     /// <summary>
-    /// Get all orders that are awaiting assignment (have status = New)
+    /// Get all orders that are awaiting assignment (have status New)
     /// </summary>
-    /// <returns></returns>
+    /// <returns>List of new orders waiting for driver to be assigned</returns>
     public List<Order> GetAwaitingOrder()
     {
         return uow.Orders.GetAll()
             .Where(o => o.Status == OrderStatus.New).ToList();
     }
+    
 
 
-    // Aux methods for distance and price calculation
+    // Aux methods for price and fake distance calculation
 
     private float EstimateDistance(Address? start, Address? end)
     {
@@ -134,9 +136,10 @@ public class OrderService(UnitOfWork uow)
 
     private decimal CalculatePrice(float distance, Tariff? tariff)
     {
-        if (tariff == null) return 0m;
+        if (tariff == null)
+            return 0m;
 
-        // Base lofic: distance * prace per km got from the tariff
+        // Base logic: distance * price per km got from the tariff
         decimal totalPrice = (decimal)distance * tariff.PricePerKm;
 
         // TODO: Add real external value for minimal order price.
@@ -144,5 +147,30 @@ public class OrderService(UnitOfWork uow)
         decimal minimalPrice = 50.0m; 
 
         return totalPrice > 0 ? totalPrice : minimalPrice;
+    }
+
+    /// <summary>
+    /// Cancel an order. If a driver was assigned, they get free status
+    /// </summary>
+    public bool CancelOrder(int orderId)
+    {
+        var order = uow.Orders.GetById(orderId);
+
+        // Check if order exists and is not already finished or cancelled
+        if (order == null || order.Status == OrderStatus.Finished || order.Status == OrderStatus.Canceled)
+            return false;
+
+        // If a driver was assigned, set their status to free
+        if (order.Driver != null)
+        {
+            order.Driver.Status = DriverStatus.Free;
+            uow.Drivers.Update(order.Driver);
+        }
+
+        // Update order status to canceled
+        order.Status = OrderStatus.Canceled;
+
+        // Save changes
+        return uow.Orders.Update(order);
     }
 }

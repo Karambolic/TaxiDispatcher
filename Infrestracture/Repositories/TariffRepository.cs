@@ -8,7 +8,7 @@ public class TariffRepository(DbConnectionFactory connectionFactory) : IReposito
 {
     public void Add(Tariff entity)
     {
-        using var connection = connectionFactory.CreateConnection();
+        using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
         const string sql = @"
@@ -25,7 +25,7 @@ public class TariffRepository(DbConnectionFactory connectionFactory) : IReposito
 
     public Tariff? GetById(int id)
     {
-        using var connection = connectionFactory.CreateConnection();
+        using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
         using var cmd = new SqlCommand("SELECT * FROM Tariffs WHERE Id = @id", connection);
@@ -38,7 +38,7 @@ public class TariffRepository(DbConnectionFactory connectionFactory) : IReposito
     public List<Tariff> GetAll()
     {
         var list = new List<Tariff>();
-        using var connection = connectionFactory.CreateConnection();
+        using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
         using var cmd = new SqlCommand("SELECT * FROM Tariffs", connection);
@@ -53,7 +53,7 @@ public class TariffRepository(DbConnectionFactory connectionFactory) : IReposito
 
     public bool Update(Tariff entity)
     {
-        using var connection = connectionFactory.CreateConnection();
+        using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
         const string sql = "UPDATE Tariffs SET Name = @name, PricePerKm = @price WHERE Id = @id";
@@ -68,7 +68,7 @@ public class TariffRepository(DbConnectionFactory connectionFactory) : IReposito
 
     public bool Delete(int id)
     {
-        using var connection = connectionFactory.CreateConnection();
+        using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
         using var cmd = new SqlCommand("DELETE FROM Tariffs WHERE Id = @id", connection);

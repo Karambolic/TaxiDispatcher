@@ -1,50 +1,55 @@
-﻿using Application.Services;
+﻿using BusinessLogic.Services;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
-using UI.ViewModels;
+using UI.Infrastructure;
 
-namespace TaxiDispatcher.WPF.ViewModels;
+namespace UI.ViewModels;
 
-public class LoginViewModel : ViewModelBase
+public class LoginViewModel(DispatcherService dispatcherService, IServiceProvider serviceProvider) : ViewModelBase
 {
-    private readonly DispatcherService _dispatcherService;
-    private string _phoneNumber = "";
-    private string _password = "";
+    private string _login = "";
+    private string _errorMessage = "";
 
-    public string PhoneNumber
+    public string Login
     {
-        get => _phoneNumber;
-        set => SetProperty(ref _phoneNumber, value);
+        get => _login;
+        set => SetProperty(ref _login, value);
     }
 
-    public string Password
+    public string ErrorMessage
     {
-        get => _password;
-        set => SetProperty(ref _password, value);
+        get => _errorMessage;
+        set => SetProperty(ref _errorMessage, value);
     }
 
-    // Команда для кнопки "Увійти"
-    public ICommand LoginCommand { get; }
+    // Define the command for the Login button
+    public ICommand LoginCommand => new RelayCommand(ExecuteLogin, CanExecuteLogin);
 
-    public LoginViewModel(DispatcherService dispatcherService)
+    // Button is disabled if login is empty
+    private bool CanExecuteLogin(object? parameter) => !string.IsNullOrWhiteSpace(Login);
+
+    private void ExecuteLogin(object? parameter)
     {
-        _dispatcherService = dispatcherService;
-        LoginCommand = new RelayCommand(ExecuteLogin, CanExecuteLogin);
-    }
+        var passwordBox = parameter as PasswordBox;
+        var password = passwordBox?.Password ?? string.Empty;
 
-    private bool CanExecuteLogin(object? obj) =>
-        !string.IsNullOrWhiteSpace(PhoneNumber) && !string.IsNullOrWhiteSpace(Password);
-
-    private void ExecuteLogin(object? obj)
-    {
-        if (_dispatcherService.Login(PhoneNumber, Password))
+        if (dispatcherService.Login(Login, password))
         {
-            // Логіка переходу на головне вікно
-            MessageBox.Show($"Вітаємо, {_dispatcherService.CurrentDispatcher.FirstName}!");
+            // 1. Get the MainWindow from the DI container
+            var mainWindow = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
+                .GetRequiredService<MainWindow>(serviceProvider);
+
+            // 2. Show the new window
+            mainWindow.Show();
+
+            // 3. Close the current Login window
+            Application.Current.MainWindow.Close();
+            Application.Current.MainWindow = mainWindow;
         }
         else
         {
-            MessageBox.Show("Невірний номер або пароль");
+            ErrorMessage = "Invalid login or password!";
         }
     }
 }

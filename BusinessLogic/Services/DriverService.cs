@@ -6,7 +6,7 @@ namespace BusinessLogic.Services;
 public class DriverService(UnitOfWork unitOfWork)
 {
     /// <summary>
-    /// Реєстрація нового водія
+    /// Register a new driver in the system. Initially, the driver has no assigned vehicle and is marked as free.
     /// </summary>
     public Driver AddNewDriver(string firstName, string lastName, string phoneNumber)
     {
@@ -16,64 +16,71 @@ public class DriverService(UnitOfWork unitOfWork)
     }
 
     /// <summary>
-    /// Додавання автомобіля та призначення його водію
+    /// Register a vehicle for a driver. This method associates an automobile with a driver and specifies which tariffs the vehicle can operate under.
     /// </summary>
     public bool RegisterVehicleForDriver(int driverId, Automobile auto, List<Tariff> allowedTariffs)
     {
         var driver = unitOfWork.Drivers.GetById(driverId);
-        if (driver == null) return false;
+        if (driver == null) 
+            return false;
 
-        // Додаємо тарифи до об'єкта авто перед збереженням
+        // Add tariffs to the automobile
         auto.AllowedTariffs = allowedTariffs;
 
-        // Зберігаємо авто (репозиторій сам запише дані в Automobiles та TariffAvailability)
-        unitOfWork.Automobiles.Add(auto);
-
-        // Оновлюємо водія, прив'язуючи ID нового авто
-        // Примітка: Переконайся, що в сутності Driver є властивість AutomobileId або об'єкт Automobile
+        // Update the driver, linking the new automobile with the driver
         driver.Status = DriverStatus.Free;
-        // unitOfWork.Drivers.Update(driver); 
+        unitOfWork.Drivers.Update(driver);
+
+        // Update the automobile, linking it to the driver and save it to the database
+        auto.Driver = driver;
+        unitOfWork.Automobiles.Add(auto);
 
         return true;
     }
 
     /// <summary>
-    /// Отримання водіїв, які можуть виконати замовлення за певним тарифом
+    /// Get a list of drivers who are currently free and have vehicles that can operate under a specific tariff
     /// </summary>
-    public List<Driver> GetDriversByTariff(int tariffId)
+    public List<Driver> GetFreeDriversByTariff(int tariffId)
     {
-        // Це складна логіка: беремо вільних водіїв і фільтруємо за тарифами їхніх авто
-        var allDrivers = unitOfWork.Drivers.GetByStatus(DriverStatus.Free);
+        var freeDrivers = unitOfWork.Drivers.GetByStatus(DriverStatus.Free);
 
-        return allDrivers.Where(d =>
-            unitOfWork.Automobiles.GetById(d.Id)? // Тут логіка залежить від того, як пов'язані ID
-            .AllowedTariffs.Any(t => t.Id == tariffId) ?? false
-        ).ToList();
+        return freeDrivers.Where(d => {
+            // Look for the car where DriverId == d.Id
+            var auto = unitOfWork.Automobiles.GetAll()
+                        .FirstOrDefault(a => a.Driver?.Id == d.Id);
+
+            return auto?.AllowedTariffs.Any(t => t.Id == tariffId) ?? false;
+        }).ToList();
     }
 
-    public List<Driver> GetAvailableDrivers() => unitOfWork.Drivers.GetByStatus(DriverStatus.Free);
+    public List<Driver> GetAllFreeDrivers() => unitOfWork.Drivers.GetByStatus(DriverStatus.Free);
 
     public bool ChangeDriverStatus(int driverId, DriverStatus newStatus)
     {
         var driver = unitOfWork.Drivers.GetById(driverId);
-        if (driver == null) return false;
+        if (driver == null) 
+            return false;
 
         driver.Status = newStatus;
         return unitOfWork.Drivers.Update(driver);
     }
 
     /// <summary>
-    /// Повне видалення водія разом з його автомобілем
+    /// Full termination of a driver's contract
     /// </summary>
     public bool TerminateContract(int driverId)
     {
         var driver = unitOfWork.Drivers.GetById(driverId);
         if (driver == null) return false;
 
-        // 1. Видаляємо авто (залежно від логіки FK в БД)
-        // unitOfWork.Automobiles.Delete(driver.AutomobileId);
+        var auto = unitOfWork.Automobiles.GetAll().FirstOrDefault(a => a.Driver?.Id == driverId);
 
-        // 2. Видаляємо водія
+        // Delete the automobile associated with the driver, if it exists
+        if (auto != null)
+            unitOfWork.Automobiles.Delete(auto.Id);
+
+        // Delete the driver
         return unitOfWork.Drivers.Delete(driverId);
     }
 }
