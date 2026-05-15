@@ -73,12 +73,17 @@ public partial class App : Application
         services.AddTransient<TransactionService>();
         services.AddTransient<ReportService>();
 
+        
+
         services.AddTransient<LoginViewModel>();
         services.AddTransient<MainViewModel>();
         services.AddTransient<CreateOrderViewModel>();
+        services.AddTransient<AssignDriverViewModel>();
 
         services.AddTransient<LoginWindow>();
         services.AddTransient<MainWindow>();
         services.AddTransient<CreateOrderWindow>();
+        services.AddTransient<AssignDriverWindow>();
+
     }
 }
