@@ -70,7 +70,18 @@ public class MainViewModel : ViewModelBase
         _clientService = clientService;
         _reportService = reportService;
 
-        RefreshOrdersCommand = new RelayCommand(_ => LoadActiveOrders());
+        RefreshOrdersCommand = new RelayCommand(_ =>
+        {
+            try
+            {
+                LoadActiveOrders();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load orders:\n{ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        });
 
         CreateOrderCommand = new RelayCommand(_ => ExecuteOpenCreateOrder());
 
@@ -79,17 +90,15 @@ public class MainViewModel : ViewModelBase
         LogoutCommand = new RelayCommand(_ => ExecuteLogout());
 
         InitializeReportCommands();
-        Task.Run(() => Application.Current.Dispatcher.Invoke(() => LoadActiveOrders()));
+        LoadActiveOrders();
     }
 
     private void LoadActiveOrders()
     {
-        Orders.Clear();
         var data = _orderService.GetActiveOrders();
+        Orders.Clear();
         foreach (var order in data)
-        {
             Orders.Add(order);
-        }
     }
 
     private void ExecuteOpenCreateOrder()

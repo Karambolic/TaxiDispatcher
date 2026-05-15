@@ -12,7 +12,7 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         connection.Open();
 
         const string sqlAuto = @"
-            INSERT INTO Automobile (PlateNumber, Make, Model, [Year], Capacity, DriverId)
+            INSERT INTO [Automobile] (plateNumber, make, model, [year], capacity, driverId)
             VALUES (@plate, @make, @model, @year, @capacity, @driverId);
             SELECT SCOPE_IDENTITY();";
 
@@ -22,7 +22,6 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         cmd.Parameters.AddWithValue("@model", entity.Model);
         cmd.Parameters.AddWithValue("@year", entity.Year);
         cmd.Parameters.AddWithValue("@capacity", entity.Capacity);
-        // Handle null driver
         cmd.Parameters.AddWithValue("@driverId", (object?)entity.Driver?.Id ?? DBNull.Value);
 
         entity.Id = Convert.ToInt32(cmd.ExecuteScalar());
@@ -35,12 +34,11 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
-        // Left join to get driver details if they exist
         const string sql = @"
-            SELECT a.*, d.FirstName, d.LastName, d.PhoneNumber, d.Status as DriverStatus
-            FROM Automobile a
-            LEFT JOIN Driver d ON a.DriverId = d.Id
-            WHERE a.Id = @id";
+            SELECT a.*, d.firstName, d.lastName, d.phoneNumber, d.statusId as driverStatus
+            FROM [Automobile] a
+            LEFT JOIN [Driver] d ON a.driverId = d.id
+            WHERE a.id = @id";
 
         using var cmd = new SqlCommand(sql, connection);
         cmd.Parameters.AddWithValue("@id", id);
@@ -56,10 +54,6 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         return automobile;
     }
 
-    /// <summary>
-    /// Total taxi fleet report with driver details for each automobile
-    /// </summary>
-    /// <returns>List of Automobile with their associated drivers</returns>
     public List<Automobile> GetAll()
     {
         var result = new List<Automobile>();
@@ -67,9 +61,9 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         connection.Open();
 
         const string sql = @"
-            SELECT a.*, d.FirstName, d.LastName, d.PhoneNumber, d.Status as DriverStatus
-            FROM Automobile a
-            LEFT JOIN Driver d ON a.DriverId = d.Id";
+            SELECT a.*, d.firstName, d.lastName, d.phoneNumber, d.statusId as driverStatus
+            FROM [Automobile] a
+            LEFT JOIN [Driver] d ON a.driverId = d.id";
 
         using var cmd = new SqlCommand(sql, connection);
         using var reader = cmd.ExecuteReader();
@@ -91,10 +85,10 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         connection.Open();
 
         const string sql = @"
-            UPDATE Automobile 
-            SET PlateNumber = @plate, Make = @make, Model = @model, 
-                [Year] = @year, Capacity = @capacity, DriverId = @driverId
-            WHERE Id = @id";
+            UPDATE [Automobile] 
+            SET plateNumber = @plate, make = @make, model = @model, 
+                [year] = @year, capacity = @capacity, driverId = @driverId
+            WHERE id = @id";
 
         using var cmd = new SqlCommand(sql, connection);
         cmd.Parameters.AddWithValue("@id", entity.Id);
@@ -120,12 +114,12 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
-        const string sqlDelRel = "DELETE FROM TariffAvailability WHERE automobileId = @id";
+        const string sqlDelRel = "DELETE FROM [TariffAvailability] WHERE automobileId = @id";
         using var cmdRel = new SqlCommand(sqlDelRel, connection);
         cmdRel.Parameters.AddWithValue("@id", id);
         cmdRel.ExecuteNonQuery();
 
-        const string sqlAuto = "DELETE FROM Automobile WHERE Id = @id";
+        const string sqlAuto = "DELETE FROM [Automobile] WHERE id = @id";
         using var cmdAuto = new SqlCommand(sqlAuto, connection);
         cmdAuto.Parameters.AddWithValue("@id", id);
 
@@ -134,49 +128,36 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
 
     static private Automobile MapReaderToAutomobile(SqlDataReader reader)
     {
-        // Determine if there is a driver linked in this row
         Driver? linkedDriver = null;
 
-        if (reader["DriverId"] != DBNull.Value)
+        if (reader["driverId"] != DBNull.Value)
         {
-            linkedDriver = new Driver
-            {
-                Id = (int)reader["DriverId"],
-                FirstName = (string)reader["FirstName"],
-                LastName = (string)reader["LastName"],
-                PhoneNumber = (string)reader["PhoneNumber"],
-                Status = (DriverStatus)(int)reader["DriverStatus"]
-            };
+            linkedDriver = new Driver(
+                (string)reader["firstName"],
+                (string)reader["lastName"],
+                (string)reader["phoneNumber"],
+                (int)reader["driverId"],
+                (DriverStatus)(int)reader["driverStatus"]
+            );
         }
 
-        // Create the automobile using the constructor, passing the driver.
-        // The 'linkedDriver' will be null if no DriverId was found in the DB
         return new Automobile(
-            (string)reader["PlateNumber"],
-            (string)reader["Make"],
-            (string)reader["Model"],
-            (int)reader["Year"],
-            (int)reader["Capacity"],
+            (string)reader["plateNumber"],
+            (string)reader["make"],
+            (string)reader["model"],
+            (int)reader["year"],
+            (int)reader["capacity"],
             linkedDriver!,
-            (int)reader["Id"]
-            
+            (int)reader["id"]
         );
     }
 
-   /// <summary>
-   /// Retrieves the list of tariffs available for the specified automobile from the database.
-   /// </summary>
-   /// <param name="automobileId">The unique identifier of the automobile for which to load available tariffs.</param>
-   /// <param name="connection">An open SQL connection used to execute the query. The connection must remain open for the duration of the method
-   /// call.</param>
-   /// <returns>A list of Tariff objects representing the tariffs available for the specified automobile. The list is empty if no
-   /// tariffs are available.</returns>
     static private List<Tariff> LoadAvailableTariffs(int automobileId, SqlConnection connection)
     {
         var tariffs = new List<Tariff>();
         const string sql = @"
-            SELECT t.* FROM Tariffs t
-            JOIN TariffAvailability ta ON t.Id = ta.tariffId
+            SELECT t.* FROM [Tariff] t
+            JOIN [TariffAvailability] ta ON t.id = ta.tariffId
             WHERE ta.automobileId = @aId";
 
         using var cmd = new SqlCommand(sql, connection);
@@ -184,17 +165,19 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
-            tariffs.Add(new Tariff(
-                (string)reader["Name"],
-                (decimal)reader["PricePerKm"],
-                (int)reader["Id"]));
+            tariffs.Add(new Tariff
+            {
+                Id = (int)reader["id"],
+                Name = (string)reader["name"],
+                PricePerKm = (decimal)reader["pricePerKm"]
+            });
         }
         return tariffs;
     }
 
     static private void UpdateAvailableTariffs(Automobile entity, SqlConnection connection)
     {
-        const string sqlDelete = "DELETE FROM TariffAvailability WHERE automobileId = @aId";
+        const string sqlDelete = "DELETE FROM [TariffAvailability] WHERE automobileId = @aId";
         using var cmdDel = new SqlCommand(sqlDelete, connection);
         cmdDel.Parameters.AddWithValue("@aId", entity.Id);
         cmdDel.ExecuteNonQuery();
@@ -203,7 +186,7 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         {
             foreach (var tariff in entity.AllowedTariffs)
             {
-                const string sqlInsert = "INSERT INTO TariffAvailability (automobileId, tariffId) VALUES (@aId, @tId)";
+                const string sqlInsert = "INSERT INTO [TariffAvailability] (automobileId, tariffId) VALUES (@aId, @tId)";
                 using var cmdIns = new SqlCommand(sqlInsert, connection);
                 cmdIns.Parameters.AddWithValue("@aId", entity.Id);
                 cmdIns.Parameters.AddWithValue("@tId", tariff.Id);

@@ -10,17 +10,18 @@ public class TransactionRepository(DbConnectionFactory connectionFactory) : IRep
     {
         using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
+
         const string sql = @"
-            INSERT INTO Transaction (TransactionType, DriverId, ClientId, Amount, Comment, Timestamp)
-            VALUES (@type, @drId, @clId, @amount, @comment, @time);
+            INSERT INTO [Transaction] (typeId, driverId, clientId, amount, details, [timestamp])
+            VALUES (@type, @drId, @clId, @amount, @details, @time);
             SELECT SCOPE_IDENTITY();";
 
         using var cmd = new SqlCommand(sql, connection);
         cmd.Parameters.AddWithValue("@type", (int)entity.TransactionType);
-        cmd.Parameters.AddWithValue("@drId", entity.DriverId);
-        cmd.Parameters.AddWithValue("@clId", entity.ClientId);
+        cmd.Parameters.AddWithValue("@drId", (object?)entity.DriverId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@clId", (object?)entity.ClientId ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@amount", entity.Amount);
-        cmd.Parameters.AddWithValue("@comment", (object?)entity.Comment ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@details", (object?)entity.Comment ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@time", entity.Timestamp);
 
         entity.Id = Convert.ToInt32(cmd.ExecuteScalar());
@@ -30,7 +31,7 @@ public class TransactionRepository(DbConnectionFactory connectionFactory) : IRep
     {
         using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("SELECT * FROM Transaction WHERE Id = @id", connection);
+        using var cmd = new SqlCommand("SELECT * FROM [Transaction] WHERE [id] = @id", connection);
         cmd.Parameters.AddWithValue("@id", id);
 
         using var reader = cmd.ExecuteReader();
@@ -43,7 +44,7 @@ public class TransactionRepository(DbConnectionFactory connectionFactory) : IRep
         using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Transaction ORDER BY Timestamp DESC", connection);
+        using var cmd = new SqlCommand("SELECT * FROM [Transaction] ORDER BY [timestamp] DESC", connection);
         using var reader = cmd.ExecuteReader();
 
         while (reader.Read())
@@ -61,13 +62,13 @@ public class TransactionRepository(DbConnectionFactory connectionFactory) : IRep
     {
         return new Transaction
         {
-            Id = (int)reader["Id"],
-            TransactionType = (TransactionType)(int)reader["TransactionType"],
-            DriverId = (int)reader["DriverId"],
-            ClientId = (int)reader["ClientId"],
-            Amount = (decimal)reader["Amount"],
-            Comment = reader["Comment"] as string ?? string.Empty,
-            Timestamp = (DateTime)reader["Timestamp"]
+            Id = (int)reader["id"],
+            TransactionType = (TransactionType)(int)reader["typeId"],
+            DriverId = reader["driverId"] != DBNull.Value ? (int)reader["driverId"] : null,
+            ClientId = reader["clientId"] != DBNull.Value ? (int)reader["clientId"] : null,
+            Amount = (decimal)reader["amount"],
+            Comment = reader["details"]?.ToString() ?? string.Empty,
+            Timestamp = (DateTime)reader["timestamp"]
         };
     }
 }

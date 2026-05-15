@@ -115,7 +115,7 @@
                                     <DataTrigger Binding="{Binding Status}" Value="New">
                                         <Setter Property="Background" Value="#CCFFCC"/>
                                     </DataTrigger>
-                                    <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                                    <DataTrigger Binding="{Binding Status}" Value="Canceled">
                                         <Setter Property="Background" Value="#FFCCCC"/>
                                         <Setter Property="Foreground" Value="DarkRed"/>
                                         <Setter Property="FontStyle" Value="Italic"/>
@@ -125,12 +125,27 @@
                         </DataGrid.RowStyle>
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="40"/>
                             <DataGridTextColumn Header="Client phone" Binding="{Binding Client.PhoneNumber}" Width="110"/>
-                            <DataGridTextColumn Header="Pickup" Binding="{Binding AddressStart.Street}" Width="1.5*"/>
-                            <DataGridTextColumn Header="Destination" Binding="{Binding AddressEnd.Street}" Width="1.5*"/>
 
-                            <DataGridTextColumn Header="Pax" Binding="{Binding PassengersCount}" Width="40">
+                            <DataGridTextColumn Header="Pickup" Width="1.5*">
+                                <DataGridTextColumn.Binding>
+                                    <MultiBinding StringFormat="{}{0}, {1}">
+                                        <Binding Path="AddressStart.StreetName" />
+                                        <Binding Path="AddressStart.StreetNumber" />
+                                    </MultiBinding>
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Destination" Width="1.5*">
+                                <DataGridTextColumn.Binding>
+                                    <MultiBinding StringFormat="{}{0}, {1}">
+                                        <Binding Path="AddressEnd.StreetName" />
+                                        <Binding Path="AddressEnd.StreetNumber" />
+                                    </MultiBinding>
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Pax" Binding="{Binding PassengerCount}" Width="40">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -138,7 +153,7 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Commentary" Binding="{Binding Commentary}" Width="2*">
+                            <DataGridTextColumn Header="Commentary" Binding="{Binding Comment}" Width="2*">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontStyle" Value="Italic"/>

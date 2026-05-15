@@ -12,7 +12,7 @@ public class TariffRepository(DbConnectionFactory connectionFactory) : IReposito
         connection.Open();
 
         const string sql = @"
-            INSERT INTO Tariffs (Name, PricePerKm) 
+            INSERT INTO [Tariff] ([name], [pricePerKm]) 
             VALUES (@name, @price); 
             SELECT SCOPE_IDENTITY();";
 
@@ -28,7 +28,7 @@ public class TariffRepository(DbConnectionFactory connectionFactory) : IReposito
         using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Tariffs WHERE Id = @id", connection);
+        using var cmd = new SqlCommand("SELECT * FROM [Tariff] WHERE [id] = @id", connection);
         cmd.Parameters.AddWithValue("@id", id);
 
         using var reader = cmd.ExecuteReader();
@@ -41,7 +41,7 @@ public class TariffRepository(DbConnectionFactory connectionFactory) : IReposito
         using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Tariffs", connection);
+        using var cmd = new SqlCommand("SELECT * FROM [Tariff]", connection);
         using var reader = cmd.ExecuteReader();
 
         while (reader.Read())
@@ -56,7 +56,7 @@ public class TariffRepository(DbConnectionFactory connectionFactory) : IReposito
         using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
-        const string sql = "UPDATE Tariffs SET Name = @name, PricePerKm = @price WHERE Id = @id";
+        const string sql = "UPDATE [Tariff] SET [name] = @name, [pricePerKm] = @price WHERE [id] = @id";
 
         using var cmd = new SqlCommand(sql, connection);
         cmd.Parameters.AddWithValue("@name", entity.Name);
@@ -71,7 +71,7 @@ public class TariffRepository(DbConnectionFactory connectionFactory) : IReposito
         using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("DELETE FROM Tariffs WHERE Id = @id", connection);
+        using var cmd = new SqlCommand("DELETE FROM [Tariff] WHERE [id] = @id", connection);
         cmd.Parameters.AddWithValue("@id", id);
 
         return cmd.ExecuteNonQuery() > 0;
@@ -79,10 +79,11 @@ public class TariffRepository(DbConnectionFactory connectionFactory) : IReposito
 
     private Tariff MapReaderToTariff(SqlDataReader reader)
     {
-        return new Tariff(
-            (string)reader["Name"],
-            (decimal)reader["PricePerKm"],
-            (int)reader["Id"]
-        );
+        return new Tariff
+        {
+            Id = (int)reader["id"],
+            Name = reader["name"].ToString() ?? string.Empty,
+            PricePerKm = Convert.ToDecimal(reader["pricePerKm"])
+        };
     }
 }

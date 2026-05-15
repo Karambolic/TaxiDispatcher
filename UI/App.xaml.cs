@@ -34,18 +34,21 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        try
+        // Catch exceptions thrown on background threads
+        AppDomain.CurrentDomain.UnhandledException += (s, ex) =>
+            MessageBox.Show(ex.ExceptionObject?.ToString(), "Unhandled Exception");
+
+        // Catch exceptions thrown on the UI thread via Dispatcher
+        DispatcherUnhandledException += (s, ex) =>
         {
-            base.OnStartup(e);
-            var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
-            loginWindow.Show();
-        }
-        catch (Exception ex)
-        {
-            // Print the missing type during DI setup to the 'Output' window in Visual Studio. For debug purposes only, not for production.
-            System.Diagnostics.Debug.WriteLine(ex.ToString());
-            MessageBox.Show(ex.Message); 
-        }
+            MessageBox.Show(ex.Exception?.ToString(), "UI Exception");
+            ex.Handled = true; // Prevents app from closing
+        };
+
+        base.OnStartup(e);
+
+        var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
+        loginWindow.Show();
     }
 
     private void ConfigureServices(IServiceCollection services)

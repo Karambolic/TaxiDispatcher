@@ -10,7 +10,7 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        const string sql = "INSERT INTO Dispatcher (FirstName, LastName, PhoneNumber) VALUES (@fn, @ln, @ph); SELECT SCOPE_IDENTITY();";
+        const string sql = "INSERT INTO [Dispatcher] (firstName, lastName, phoneNumber) VALUES (@fn, @ln, @ph); SELECT SCOPE_IDENTITY();";
         using var cmd = new SqlCommand(sql, (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@fn", entity.FirstName);
         cmd.Parameters.AddWithValue("@ln", entity.LastName);
@@ -22,12 +22,12 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("SELECT * FROM Dispatcher WHERE PhoneNumber = @phone", (SqlConnection)connection);
+        using var cmd = new SqlCommand("SELECT * FROM [Dispatcher] WHERE phoneNumber = @phone", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@phone", phone);
         using var reader = cmd.ExecuteReader();
 
         if (reader.Read())
-            return new Dispatcher((string)reader["FirstName"], (string)reader["LastName"], (string)reader["PhoneNumber"], (int)reader["Id"]);
+            return MapReaderToDispatcher(reader);
 
         return null;
     }
@@ -36,12 +36,12 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("SELECT * FROM Dispatcher WHERE Id = @id", (SqlConnection)connection);
+        using var cmd = new SqlCommand("SELECT * FROM [Dispatcher] WHERE id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
         using var reader = cmd.ExecuteReader();
 
         if (reader.Read())
-            return new Dispatcher((string)reader["FirstName"], (string)reader["LastName"], (string)reader["PhoneNumber"], (int)reader["Id"]);
+            return MapReaderToDispatcher(reader);
 
         return null;
     }
@@ -50,7 +50,7 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        const string sql = "UPDATE Dispatcher SET FirstName = @fn, LastName = @ln, PhoneNumber = @ph WHERE Id = @id";
+        const string sql = "UPDATE [Dispatcher] SET firstName = @fn, lastName = @ln, phoneNumber = @ph WHERE id = @id";
         using var cmd = new SqlCommand(sql, (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", entity.Id);
         cmd.Parameters.AddWithValue("@fn", entity.FirstName);
@@ -64,10 +64,10 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
         var list = new List<Dispatcher>();
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("SELECT * FROM Dispatcher", (SqlConnection)connection);
+        using var cmd = new SqlCommand("SELECT * FROM [Dispatcher]", (SqlConnection)connection);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
-            list.Add(new Dispatcher((string)reader["FirstName"], (string)reader["LastName"], (string)reader["PhoneNumber"], (int)reader["Id"]));
+            list.Add(MapReaderToDispatcher(reader));
         return list;
     }
 
@@ -75,38 +75,43 @@ public class DispatcherRepository(DbConnectionFactory connectionFactory) : IDisp
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("DELETE FROM Dispatcher WHERE Id = @id", (SqlConnection)connection);
+        using var cmd = new SqlCommand("DELETE FROM [Dispatcher] WHERE id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
         return cmd.ExecuteNonQuery() > 0;
     }
 
-    /// <summary>
-    /// Retrieves the hashed password for a dispatcher based on their login
-    /// </summary>
-    /// <param name="login">The login of the dispatcher</param>
-    /// <returns>The hashed password of the dispatcher if found; otherwise, null</returns>
     public string? GetHashedPasswordByLogin(string login)
-{
-    using var connection = connectionFactory.CreateConnection();
-    connection.Open();
-    using var cmd = new SqlCommand("SELECT PasswordHashed FROM Credentials WHERE Login = @login", (SqlConnection)connection);
-    cmd.Parameters.AddWithValue("@login", login);
+    {
+        using var connection = connectionFactory.CreateConnection();
+        connection.Open();
+        using var cmd = new SqlCommand("SELECT passwordHashed FROM [Credentials] WHERE login = @login", (SqlConnection)connection);
+        cmd.Parameters.AddWithValue("@login", login);
 
-    var result = cmd.ExecuteScalar();
-    if (result == null) return null;
+        var result = cmd.ExecuteScalar();
+        if (result == null || result == DBNull.Value) return null;
 
-    return result.ToString()?.Trim().ToLower();
-}
+        return result.ToString()?.Trim();
+    }
 
     public Dispatcher? GetByLogin(string login)
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("SELECT d.* FROM Dispatcher d JOIN Credentials c ON d.Id = c.DispatcherId WHERE c.Login = @login", (SqlConnection)connection);
+        using var cmd = new SqlCommand("SELECT d.* FROM [Dispatcher] d JOIN [Credentials] c ON d.id = c.dispatcherId WHERE c.login = @login", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@login", login);
         using var reader = cmd.ExecuteReader();
         if (reader.Read())
-            return new Dispatcher((string)reader["FirstName"], (string)reader["LastName"], (string)reader["PhoneNumber"], (int)reader["Id"]);
+            return MapReaderToDispatcher(reader);
         return null;
+    }
+
+    private static Dispatcher MapReaderToDispatcher(SqlDataReader reader)
+    {
+        return new Dispatcher(
+            (string)reader["firstName"],
+            (string)reader["lastName"],
+            (string)reader["phoneNumber"],
+            (int)reader["id"]
+        );
     }
 }
