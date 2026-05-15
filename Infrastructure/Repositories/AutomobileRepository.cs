@@ -12,7 +12,7 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         connection.Open();
 
         const string sqlAuto = @"
-            INSERT INTO Automobiles (PlateNumber, Make, Model, [Year], Capacity, DriverId)
+            INSERT INTO Automobile (PlateNumber, Make, Model, [Year], Capacity, DriverId)
             VALUES (@plate, @make, @model, @year, @capacity, @driverId);
             SELECT SCOPE_IDENTITY();";
 
@@ -38,8 +38,8 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         // Left join to get driver details if they exist
         const string sql = @"
             SELECT a.*, d.FirstName, d.LastName, d.PhoneNumber, d.Status as DriverStatus
-            FROM Automobiles a
-            LEFT JOIN Drivers d ON a.DriverId = d.Id
+            FROM Automobile a
+            LEFT JOIN Driver d ON a.DriverId = d.Id
             WHERE a.Id = @id";
 
         using var cmd = new SqlCommand(sql, connection);
@@ -59,7 +59,7 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
     /// <summary>
     /// Total taxi fleet report with driver details for each automobile
     /// </summary>
-    /// <returns>List of automobiles with their associated drivers</returns>
+    /// <returns>List of Automobile with their associated drivers</returns>
     public List<Automobile> GetAll()
     {
         var result = new List<Automobile>();
@@ -68,8 +68,8 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
 
         const string sql = @"
             SELECT a.*, d.FirstName, d.LastName, d.PhoneNumber, d.Status as DriverStatus
-            FROM Automobiles a
-            LEFT JOIN Drivers d ON a.DriverId = d.Id";
+            FROM Automobile a
+            LEFT JOIN Driver d ON a.DriverId = d.Id";
 
         using var cmd = new SqlCommand(sql, connection);
         using var reader = cmd.ExecuteReader();
@@ -91,7 +91,7 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         connection.Open();
 
         const string sql = @"
-            UPDATE Automobiles 
+            UPDATE Automobile 
             SET PlateNumber = @plate, Make = @make, Model = @model, 
                 [Year] = @year, Capacity = @capacity, DriverId = @driverId
             WHERE Id = @id";
@@ -125,7 +125,7 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         cmdRel.Parameters.AddWithValue("@id", id);
         cmdRel.ExecuteNonQuery();
 
-        const string sqlAuto = "DELETE FROM Automobiles WHERE Id = @id";
+        const string sqlAuto = "DELETE FROM Automobile WHERE Id = @id";
         using var cmdAuto = new SqlCommand(sqlAuto, connection);
         cmdAuto.Parameters.AddWithValue("@id", id);
 

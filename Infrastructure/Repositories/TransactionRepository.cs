@@ -11,7 +11,7 @@ public class TransactionRepository(DbConnectionFactory connectionFactory) : IRep
         using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
         const string sql = @"
-            INSERT INTO Transactions (TransactionType, DriverId, ClientId, Amount, Comment, Timestamp)
+            INSERT INTO Transaction (TransactionType, DriverId, ClientId, Amount, Comment, Timestamp)
             VALUES (@type, @drId, @clId, @amount, @comment, @time);
             SELECT SCOPE_IDENTITY();";
 
@@ -30,7 +30,7 @@ public class TransactionRepository(DbConnectionFactory connectionFactory) : IRep
     {
         using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("SELECT * FROM Transactions WHERE Id = @id", connection);
+        using var cmd = new SqlCommand("SELECT * FROM Transaction WHERE Id = @id", connection);
         cmd.Parameters.AddWithValue("@id", id);
 
         using var reader = cmd.ExecuteReader();
@@ -43,7 +43,7 @@ public class TransactionRepository(DbConnectionFactory connectionFactory) : IRep
         using var connection = (SqlConnection)connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Transactions ORDER BY Timestamp DESC", connection);
+        using var cmd = new SqlCommand("SELECT * FROM Transaction ORDER BY Timestamp DESC", connection);
         using var reader = cmd.ExecuteReader();
 
         while (reader.Read())
@@ -57,7 +57,7 @@ public class TransactionRepository(DbConnectionFactory connectionFactory) : IRep
 
     public bool Delete(int id) => throw new NotSupportedException("Transactions cannot be deleted.");
 
-    private Transaction MapReaderToTransaction(SqlDataReader reader)
+    static private Transaction MapReaderToTransaction(SqlDataReader reader)
     {
         return new Transaction
         {

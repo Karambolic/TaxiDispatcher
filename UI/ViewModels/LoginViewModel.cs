@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using UI.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace UI.ViewModels;
 
@@ -23,35 +24,44 @@ public class LoginViewModel(DispatcherService dispatcherService, IServiceProvide
         set => SetProperty(ref _errorMessage, value);
     }
 
-    // Define the command for the Login button
     public ICommand LoginCommand => new RelayCommand(ExecuteLogin, CanExecuteLogin);
 
-    // A flag for whether the Login button should be enabled
-    private bool CanExecuteLogin(object? parameter) => !string.IsNullOrWhiteSpace(Login);
+    // Button is only active if Login is filled AND PasswordBox has content
+    private bool CanExecuteLogin(object? parameter)
+    {
+        var passwordBox = parameter as PasswordBox;
+        return !string.IsNullOrWhiteSpace(Login) && !string.IsNullOrWhiteSpace(passwordBox?.Password);
+    }
 
-
-    //Login itself logic, it will be called when the Login button is clicked
     private void ExecuteLogin(object? parameter)
     {
+        ErrorMessage = "";
         var passwordBox = parameter as PasswordBox;
         var password = passwordBox?.Password ?? string.Empty;
 
-        if (dispatcherService.Login(Login, password))
+        try
         {
-            // Get the MainWindow from the DI container
-            var mainWindow = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
-                .GetRequiredService<MainWindow>(serviceProvider);
+            dispatcherService.Login(Login, password);
 
-            // Show the new window
+            // Success logic
+            var mainWindow = serviceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
-
-            // Close the current Login window
-            Application.Current.MainWindow.Close();
+            Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w is not MainWindow)?.Close();
             Application.Current.MainWindow = mainWindow;
         }
-        else
+        catch (InvalidCredentialsException ex)
         {
-            ErrorMessage = "Invalid login or password!";
+            // Tells if it's the username or the password
+            ErrorMessage = ex.Message;
+        }
+        catch (ProfileMissingException ex)
+        {
+            // Tells if the dispatcher doesn't have a profile in the ystem (database)
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = "Connection error: " + ex.Message;
         }
     }
 }

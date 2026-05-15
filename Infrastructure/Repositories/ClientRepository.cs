@@ -12,7 +12,7 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
         connection.Open();
 
         const string sql = @"
-            INSERT INTO Clients (FirstName, LastName, PhoneNumber) 
+            INSERT INTO Client (FirstName, LastName, PhoneNumber) 
             VALUES (@fn, @ln, @ph); 
             SELECT SCOPE_IDENTITY();";
 
@@ -29,7 +29,7 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Clients WHERE Id = @id", (SqlConnection)connection);
+        using var cmd = new SqlCommand("SELECT * FROM Client WHERE Id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
 
         using var reader = cmd.ExecuteReader();
@@ -41,7 +41,7 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Clients WHERE PhoneNumber = @phone", (SqlConnection)connection);
+        using var cmd = new SqlCommand("SELECT * FROM Client WHERE PhoneNumber = @phone", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@phone", phone);
 
         using var reader = cmd.ExecuteReader();
@@ -50,19 +50,19 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
 
     public List<Client> GetAll()
     {
-        var clients = new List<Client>();
+        var Client = new List<Client>();
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Clients", (SqlConnection)connection);
+        using var cmd = new SqlCommand("SELECT * FROM Client", (SqlConnection)connection);
         using var reader = cmd.ExecuteReader();
 
         while (reader.Read())
         {
-            clients.Add(MapReaderToClient(reader));
+            Client.Add(MapReaderToClient(reader));
         }
 
-        return clients;
+        return Client;
     }
 
     public bool Update(Client entity)
@@ -71,7 +71,7 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
         connection.Open();
 
         const string sql = @"
-            UPDATE Clients 
+            UPDATE Client 
             SET FirstName = @fn, LastName = @ln, PhoneNumber = @ph 
             WHERE Id = @id";
 
@@ -89,7 +89,7 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("DELETE FROM Clients WHERE Id = @id", (SqlConnection)connection);
+        using var cmd = new SqlCommand("DELETE FROM Client WHERE Id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
 
         return cmd.ExecuteNonQuery() > 0;
@@ -106,8 +106,8 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
         );
     }
 
-    // Query 6.2 - Find clients by phone mask
-    public List<Client> GetClientsByPhoneMask(string mask)
+    // Query 6.2 - Find Client by phone mask
+    public List<Client> GetClientByPhoneMask(string mask)
     {
         var list = new List<Client>();
         using var conn = connectionFactory.CreateConnection();
@@ -124,8 +124,8 @@ public class ClientRepository(DbConnectionFactory connectionFactory) : IClientRe
         return list;
     }
 
-    // Query 6.4 - Total count of clients
-    public int GetTotalClientsCount()
+    // Query 6.4 - Total count of Client
+    public int GetTotalClientCount()
     {
         using var conn = connectionFactory.CreateConnection();
         conn.Open();

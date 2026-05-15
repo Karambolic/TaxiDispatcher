@@ -40,7 +40,7 @@ public class ClientService(UnitOfWork unitOfWork)
     public List<Client> GetClientsByPhoneMask(string mask)
     {
         if (string.IsNullOrWhiteSpace(mask)) return new List<Client>();
-        return ((ClientRepository)unitOfWork.Clients).GetClientsByPhoneMask(mask);
+        return ((ClientRepository)unitOfWork.Clients).GetClientByPhoneMask(mask);
     }
 
     /// <summary>
@@ -48,6 +48,6 @@ public class ClientService(UnitOfWork unitOfWork)
     /// </summary>
     public int GetTotalClientsCount()
     {
-        return ((ClientRepository)unitOfWork.Clients).GetTotalClientsCount();
+        return ((ClientRepository)unitOfWork.Clients).GetTotalClientCount();
     }
 }

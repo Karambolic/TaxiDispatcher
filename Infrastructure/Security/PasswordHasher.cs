@@ -9,7 +9,8 @@ namespace Infrastructure.Security
         {
             byte[] inputBytes = Encoding.UTF8.GetBytes(password);
             byte[] hashBytes = MD5.HashData(inputBytes);
-            return Convert.ToHexString(hashBytes);
+
+            return Convert.ToHexString(hashBytes).ToLower();
         }
 
         /// <summary>
@@ -21,7 +22,7 @@ namespace Infrastructure.Security
         public static bool VerifyPassword(string password, string hashedPassword)
         {
             string hashOfInput = HashPassword(password);
-            return StringComparer.OrdinalIgnoreCase.Compare(hashOfInput, hashedPassword) == 0;
+            return StringComparer.OrdinalIgnoreCase.Compare(hashOfInput.Trim(), hashedPassword.Trim()) == 0;
         }
     }
 }

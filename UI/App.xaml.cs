@@ -5,8 +5,6 @@ using Infrastructure;
 using Infrastructure.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Configuration;
 using System.IO;
 using System.Windows;
 using UI.ViewModels;
@@ -21,14 +19,14 @@ public partial class App : Application
 
     public App()
     {
-        // 1. Build the configuration object
+        // Build the configuration object
         var builder = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
         Configuration = builder.Build();
 
-        // 2. Setup DI
+        // Setup dependency injection
         var services = new ServiceCollection();
         ConfigureServices(services);
         ServiceProvider = services.BuildServiceProvider();
@@ -43,18 +41,17 @@ public partial class App : Application
 
     private void ConfigureServices(IServiceCollection services)
     {
-        // --- 1. Connection Logic ---
-        // Read the string from appsettings.json instead of hardcoding
+        // Database connection logic - read the string from appsettings.json
         string connectionString = Configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-        // Inject the connection string into your factory
+        // Inject the connection string into db connection factory
         services.AddSingleton(new DbConnectionFactory(connectionString));
 
-        // --- 2. Infrastructure ---
+        // DI for unit of ork
         services.AddScoped<UnitOfWork>();
 
-        // --- 3. Repositories ---
+        // DI for repository interfaces and their implementations
         services.AddScoped<IClientRepository, ClientRepository>();
         services.AddScoped<IDispatcherRepository, DispatcherRepository>();
         services.AddScoped<IDriverRepository, DriverRepository>();
@@ -67,8 +64,7 @@ public partial class App : Application
         services.AddScoped<AutomobileRepository>();
         services.AddScoped<ReportRepository>();
 
-        // --- 4. Business Logic (Services) ---
-        // Changed DispatcherService to Singleton so it keeps the logged-in user state across the app
+        // Business logic (Services). DispatcherService is Singleton so it keeps the logged-in user state across the app
         services.AddSingleton<DispatcherService>();
 
         services.AddTransient<AddressService>();
@@ -79,10 +75,10 @@ public partial class App : Application
         services.AddTransient<TransactionService>();
         services.AddTransient<ReportService>();
 
-        // --- 5. Presentation & UI ---
+        // UI
         services.AddTransient<LoginViewModel>();
         services.AddTransient<MainViewModel>();
-        services.AddTransient<CreateOrderViewModel>(); // Don't forget this one!
+        services.AddTransient<CreateOrderViewModel>();
 
         services.AddTransient<LoginWindow>();
         services.AddTransient<MainWindow>();

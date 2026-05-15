@@ -34,7 +34,7 @@ public class ReportRepository(DbConnectionFactory factory)
     }
 
     // Query 6.5 - Average price per tariff
-    public List<TariffAvgPriceReport> GetTariffStats()
+    public List<TariffAvgPriceReport> GetTariffStatus()
     {
         var list = new List<TariffAvgPriceReport>();
         using var conn = (SqlConnection)factory.CreateConnection();
@@ -84,8 +84,11 @@ public class ReportRepository(DbConnectionFactory factory)
         var list = new List<ClientMaxOrderReport>();
         using var conn = (SqlConnection)factory.CreateConnection();
         conn.Open();
-        string sql = @"SELECT o1.clientId, o1.id, o1.finalPrice FROM [Order] o1 
-                   WHERE o1.finalPrice = (SELECT MAX(o2.finalPrice) FROM [Order] o2 WHERE o2.clientId = o1.clientId)";
+        string sql = @"SELECT o1.clientId, o1.id, o1.finalPrice 
+                       FROM [Order] o1 
+                       WHERE o1.finalPrice = (SELECT MAX(o2.finalPrice) 
+                                              FROM [Order] o2 
+                                              WHERE o2.clientId = o1.clientId)";
 
         using var cmd = new SqlCommand(sql, conn);
         using var reader = cmd.ExecuteReader();

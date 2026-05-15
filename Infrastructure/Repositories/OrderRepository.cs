@@ -13,7 +13,7 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
         connection.Open();
 
         const string sql = @"
-            INSERT INTO Orders 
+            INSERT INTO Order 
             (ClientId, DispatcherId, DriverId, AddressStartId, AddressEndId, Status, CreatedAt, PassengerCount, FinalDistanceKm, FinalPrice, Comment)
             VALUES 
             (@clId, @dispId, @drId, @addrS, @addrE, @status, @created, @pass, @dist, @price, @cmt);
@@ -44,7 +44,7 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
             SELECT o.*, 
                  c.FirstName as ClFN, c.LastName as ClLN, c.PhoneNumber as ClPh,
                  d.FirstName as DrFN, d.LastName as DrLN, d.PhoneNumber as DrPh, d.Status as DrStatus
-            FROM Orders o
+            FROM Order o
             JOIN Clients c ON o.ClientId = c.Id
             LEFT JOIN Drivers d ON o.DriverId = d.Id
             WHERE o.Id = @id";
@@ -66,7 +66,7 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
             SELECT o.*, 
                    c.FirstName as ClFN, c.LastName as ClLN, c.PhoneNumber as ClPh,
                    d.FirstName as DrFN, d.LastName as DrLN, d.PhoneNumber as DrPh, d.Status as DrStatus
-            FROM Orders o
+            FROM Order o
             JOIN Clients c ON o.ClientId = c.Id
             LEFT JOIN Drivers d ON o.DriverId = d.Id
             ORDER BY o.CreatedAt DESC";
@@ -86,7 +86,7 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
         connection.Open();
 
         const string sql = @"
-            UPDATE Orders SET 
+            UPDATE Order SET 
                 DriverId = @drId, 
                 Status = @status, 
                 FinalDistanceKm = @dist, 
@@ -109,13 +109,13 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
-        using var cmd = new SqlCommand("DELETE FROM Orders WHERE Id = @id", (SqlConnection)connection);
+        using var cmd = new SqlCommand("DELETE FROM Order WHERE Id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
         return cmd.ExecuteNonQuery() > 0;
     }
 
     /// <summary>
-    /// Get all the order with status New or Inwork i.e. all the orders that are not finished or canceled
+    /// Get all the order with status New or Inwork i.e. all the order that are not finished or canceled
     /// </summary>
     /// <returns></returns>
     public List<Order> GetActiveOrders()
@@ -129,7 +129,7 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
             SELECT o.*, 
                    c.FirstName as ClFN, c.LastName as ClLN, c.PhoneNumber as ClPh,
                    d.FirstName as DrFN, d.LastName as DrLN, d.PhoneNumber as DrPh, d.Status as DrStatus
-            FROM Orders o
+            FROM Order o
             JOIN Clients c ON o.ClientId = c.Id
             LEFT JOIN Drivers d ON o.DriverId = d.Id
             WHERE o.Status NOT IN (@finished, @canceled)
@@ -158,7 +158,7 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
             SELECT o.*, 
                    c.FirstName as ClFN, c.LastName as ClLN, c.PhoneNumber as ClPh,
                    d.FirstName as DrFN, d.LastName as DrLN, d.PhoneNumber as DrPh, d.Status as DrStatus
-            FROM Orders o
+            FROM Order o
             JOIN Clients c ON o.ClientId = c.Id
             LEFT JOIN Drivers d ON o.DriverId = d.Id
             WHERE o.ClientId = @clientId
@@ -217,7 +217,7 @@ public class OrderRepository(DbConnectionFactory connectionFactory) : IOrderRepo
         };
     }
 
-    // Query 6.3 - Orders within a specific date range
+    // Query 6.3 - Order within a specific date range
     public List<OrderPeriodReport> GetOrdersByPeriod(DateTime start, DateTime end)
     {
         var list = new List<OrderPeriodReport>();

@@ -12,7 +12,7 @@ public class DriverRepository(DbConnectionFactory connectionFactory) : IDriverRe
         connection.Open();
 
         const string sql = @"
-            INSERT INTO Drivers (FirstName, LastName, PhoneNumber, Status)
+            INSERT INTO Driver (FirstName, LastName, PhoneNumber, Status)
             VALUES (@fn, @ln, @ph, @status);
             SELECT SCOPE_IDENTITY();";
 
@@ -30,7 +30,7 @@ public class DriverRepository(DbConnectionFactory connectionFactory) : IDriverRe
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Drivers WHERE Id = @id", (SqlConnection)connection);
+        using var cmd = new SqlCommand("SELECT * FROM Driver WHERE Id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
 
         using var reader = cmd.ExecuteReader();
@@ -43,7 +43,7 @@ public class DriverRepository(DbConnectionFactory connectionFactory) : IDriverRe
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Drivers WHERE Status = @status", (SqlConnection)connection);
+        using var cmd = new SqlCommand("SELECT * FROM Driver WHERE Status = @status", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@status", (int)status);
 
         using var reader = cmd.ExecuteReader();
@@ -60,7 +60,7 @@ public class DriverRepository(DbConnectionFactory connectionFactory) : IDriverRe
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("SELECT * FROM Drivers", (SqlConnection)connection);
+        using var cmd = new SqlCommand("SELECT * FROM Driver", (SqlConnection)connection);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -75,7 +75,7 @@ public class DriverRepository(DbConnectionFactory connectionFactory) : IDriverRe
         connection.Open();
 
         const string sql = @"
-            UPDATE Drivers 
+            UPDATE Driver 
             SET FirstName = @fn, 
                 LastName = @ln, 
                 PhoneNumber = @ph, 
@@ -97,13 +97,13 @@ public class DriverRepository(DbConnectionFactory connectionFactory) : IDriverRe
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        using var cmd = new SqlCommand("DELETE FROM Drivers WHERE Id = @id", (SqlConnection)connection);
+        using var cmd = new SqlCommand("DELETE FROM Driver WHERE Id = @id", (SqlConnection)connection);
         cmd.Parameters.AddWithValue("@id", id);
 
         return cmd.ExecuteNonQuery() > 0;
     }
 
-    private Driver MapReaderToDriver(SqlDataReader reader)
+    static private Driver MapReaderToDriver(SqlDataReader reader)
     {
         return new Driver(
             (string)reader["FirstName"],
