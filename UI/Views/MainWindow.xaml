@@ -78,7 +78,7 @@
                 <StackPanel>
                     <TextBlock Text="OPERATIONS" FontWeight="Bold" Foreground="DimGray" Margin="5,0,0,10" FontSize="12"/>
                     <Button Content="Create new order" Style="{StaticResource ActionButtonStyle}" Command="{Binding CreateOrderCommand}" Foreground="DarkOliveGreen"/>
-                    <Button Content="Refresh active list" Style="{StaticResource SidebarButtonStyle}" Command="{Binding RefreshCommand}" Foreground="Blue"/>
+                    <Button Content="Refresh active list" Style="{StaticResource SidebarButtonStyle}" Command="{Binding RefreshOrdersCommand}" Foreground="Blue"/>
                     <Button Content="Cancel selected" Style="{StaticResource SidebarButtonStyle}" Command="{Binding CancelOrderCommand}" Foreground="Crimson"/>
 
                     <Separator Margin="0,15"/>

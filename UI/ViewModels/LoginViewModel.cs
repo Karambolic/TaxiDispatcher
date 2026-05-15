@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using UI.Infrastructure;
+using UI.Views;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace UI.ViewModels;

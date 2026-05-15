@@ -1,33 +1,42 @@
 ﻿using Domain.DTO;
 using Domain.Entities;
+using Infrastructure;
 using Infrastructure.Repositories;
 
 namespace BusinessLogic.Services;
 
-public class ReportService(ReportRepository reportRepo, ClientRepository clientRepo, OrderRepository orderRepo)
+public class ReportService(UnitOfWork uow)
 {
-    // Pass-through for the fleet report
-    public List<AutoDriverReport> GetFleetAnalytics() => reportRepo.GetFleetReport();
+    public List<AutoDriverReport> GetFleetAnalytics()
+        => ((ReportRepository)uow.Reports).GetFleetReport();
 
-    // Pass-through for report of clients having phone numbers matching a specific provider mask
-    public List<Client> GetMarketingClients(string providerMask) => clientRepo.GetClientByPhoneMask(providerMask);
+    public List<Client> GetMarketingClients(string providerMask)
+        => ((ClientRepository)uow.Clients).GetClientByPhoneMask(providerMask);
 
-    // Pass-through for most effective dispatcher statistics
     public string GetTopDispatcher()
     {
-        var leader = reportRepo.GetTopDispatcher();
+        var leader = ((ReportRepository)uow.Reports).GetTopDispatcher();
         return leader != null ? leader : "No data available.";
     }
 
     public string GetTotalClientsCount()
     {
-        int clients = clientRepo.GetTotalClientCount();
+        int clients = ((ClientRepository)uow.Clients).GetTotalClientCount();
         return $"Total clients registered: {clients}";
     }
 
-    public List<OrderPeriodReport> GetPeriodReport(DateTime start, DateTime end) => orderRepo.GetOrdersByPeriod(start, end);
-    public List<TariffAvgPriceReport> GetTariffPerformance() => reportRepo.GetTariffStatus();
-    public List<ClientMaxOrderReport> GetHighValueOrders() => reportRepo.GetMaxOrdersPerClient();
-    public List<IdleDriverReport> GetDriversOnStandby() => reportRepo.GetIdleDrivers();
-    public List<TariffStatusReport> GetTariffUsage() => reportRepo.GetTariffUsageStatus();
+    public List<OrderPeriodReport> GetPeriodReport(DateTime start, DateTime end)
+        => ((OrderRepository)uow.Orders).GetOrdersByPeriod(start, end);
+
+    public List<TariffAvgPriceReport> GetTariffPerformance()
+        => ((ReportRepository)uow.Reports).GetTariffStatus();
+
+    public List<ClientMaxOrderReport> GetHighValueOrders()
+        => ((ReportRepository)uow.Reports).GetMaxOrdersPerClient();
+
+    public List<IdleDriverReport> GetDriversOnStandby()
+        => ((ReportRepository)uow.Reports).GetIdleDrivers();
+
+    public List<TariffStatusReport> GetTariffUsage()
+        => ((ReportRepository)uow.Reports).GetTariffUsageStatus();
 }

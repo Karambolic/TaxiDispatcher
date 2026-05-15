@@ -79,7 +79,7 @@ public class MainViewModel : ViewModelBase
         LogoutCommand = new RelayCommand(_ => ExecuteLogout());
 
         InitializeReportCommands();
-        LoadActiveOrders();
+        Task.Run(() => Application.Current.Dispatcher.Invoke(() => LoadActiveOrders()));
     }
 
     private void LoadActiveOrders()
@@ -94,7 +94,7 @@ public class MainViewModel : ViewModelBase
 
     private void ExecuteOpenCreateOrder()
     {
-        var dialog = new CreateOrderWindow();
+        var dialog = App.ServiceProvider.GetRequiredService<CreateOrderWindow>();
         dialog.ShowDialog(); // Open as modal dialog
         LoadActiveOrders(); // Refresh orders after creating (or not, anyway) a new one
     }
@@ -133,7 +133,7 @@ public class MainViewModel : ViewModelBase
         ReportCommands.Add("1", new RelayCommand(_ => ReportData = _reportService.GetFleetAnalytics()));
         ReportCommands.Add("2", new RelayCommand(_ => ReportData = _reportService.GetMarketingClients("+38050")));
         ReportCommands.Add("3", new RelayCommand(_ => ReportData = _reportService.GetPeriodReport(StartDate, EndDate)));
-        ReportCommands.Add("4", new RelayCommand(_ => MessageBox.Show($"Total System Clients: {_clientService.GetTotalClientsCount()}")));
+        ReportCommands.Add("4", new RelayCommand(_ => MessageBox.Show($"Total system clients: {_clientService.GetTotalClientsCount()}")));
         ReportCommands.Add("5", new RelayCommand(_ => ReportData = _reportService.GetTariffPerformance()));
         ReportCommands.Add("6", new RelayCommand(_ => {
             var leader = _reportService.GetTopDispatcher();

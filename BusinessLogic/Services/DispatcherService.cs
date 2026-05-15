@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Infrastructure;
 using Infrastructure.Security;
+using UI;
 
 namespace BusinessLogic.Services;
 
@@ -8,9 +9,9 @@ namespace BusinessLogic.Services;
 public class InvalidCredentialsException(string message) : Exception(message);
 public class ProfileMissingException(string message) : Exception(message);
 
-public class DispatcherService(UnitOfWork uow)
+public class DispatcherService(UnitOfWork uow, DispatcherSession session)
 {
-    public Dispatcher? CurrentDispatcher { get; private set; }
+    public Dispatcher? CurrentDispatcher => session.CurrentDispatcher;
 
     /// <summary>
     /// Authenticates a dispatcher. Throws specific exceptions if login fails.
@@ -21,39 +22,28 @@ public class DispatcherService(UnitOfWork uow)
     /// <exception cref="ProfileMissingException">Thrown when the dispatcher profile is missing despite valid credentials.</exception>
     public void Login(string login, string password)
     {
-        // Get hash and TRIM it (critical to remove SQL padding)
         string? storedHash = uow.Dispatchers.GetHashedPasswordByLogin(login)?.Trim();
 
         if (string.IsNullOrEmpty(storedHash))
-        {
             throw new InvalidCredentialsException("User not found.");
-        }
 
-        // Check password
         if (!PasswordHasher.VerifyPassword(password, storedHash))
-        {
             throw new InvalidCredentialsException("Incorrect password.");
-        }
 
-        // Fetch profile
         var dispatcher = uow.Dispatchers.GetByLogin(login);
-
         if (dispatcher == null)
-        {
             throw new ProfileMissingException("Credentials exist, but the Dispatcher profile is missing!");
-        }
 
-        CurrentDispatcher = dispatcher;
+        session.CurrentDispatcher = dispatcher;
     }
 
-    public void Logout() => CurrentDispatcher = null;
+    public void Logout() => session.CurrentDispatcher = null;
 
     public bool UpdateCurrentProfile(string firstName, string lastName)
     {
-        if (CurrentDispatcher == null)
-            return false;
-        CurrentDispatcher.FirstName = firstName;
-        CurrentDispatcher.LastName = lastName;
-        return uow.Dispatchers.Update(CurrentDispatcher);
+        if (session.CurrentDispatcher == null) return false;
+        session.CurrentDispatcher.FirstName = firstName;
+        session.CurrentDispatcher.LastName = lastName;
+        return uow.Dispatchers.Update(session.CurrentDispatcher);
     }
 }

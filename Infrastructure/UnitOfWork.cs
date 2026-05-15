@@ -15,8 +15,9 @@ public class UnitOfWork(DbConnectionFactory factory)
     private IRepository<Transaction>? _transactions;
     private IRepository<Automobile>? _automobiles;
     private IDispatcherRepository? _dispatchers;
+    private IReportRepository? _reports;
 
-    // Publi properties to access the repositories, initialized in the lazy way (upon real need - when called)
+    // Public properties to access the repositories, initialized in the lazy way (upon real need - when called)
     public IOrderRepository Orders => _orders ??= new OrderRepository(factory);
 
     public IClientRepository Clients => _clients ??= new ClientRepository(factory);
@@ -32,4 +33,6 @@ public class UnitOfWork(DbConnectionFactory factory)
     public IRepository<Automobile> Automobiles => _automobiles ??= new AutomobileRepository(factory);
 
     public IDispatcherRepository Dispatchers => _dispatchers ??= new DispatcherRepository(factory);
+
+    public IReportRepository Reports => _reports ??= new ReportRepository(factory);
 }

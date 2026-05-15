@@ -34,39 +34,34 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        base.OnStartup(e);
-        var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
-        loginWindow.Show();
+        try
+        {
+            base.OnStartup(e);
+            var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
+            loginWindow.Show();
+        }
+        catch (Exception ex)
+        {
+            // Print the missing type during DI setup to the 'Output' window in Visual Studio. For debug purposes only, not for production.
+            System.Diagnostics.Debug.WriteLine(ex.ToString());
+            MessageBox.Show(ex.Message); 
+        }
     }
 
     private void ConfigureServices(IServiceCollection services)
     {
-        // Database connection logic - read the string from appsettings.json
         string connectionString = Configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-        // Inject the connection string into db connection factory
         services.AddSingleton(new DbConnectionFactory(connectionString));
 
-        // DI for unit of ork
-        services.AddScoped<UnitOfWork>();
+        // Session is singleton — it holds who is logged in
+        services.AddSingleton<DispatcherSession>();
 
-        // DI for repository interfaces and their implementations
-        services.AddScoped<IClientRepository, ClientRepository>();
-        services.AddScoped<IDispatcherRepository, DispatcherRepository>();
-        services.AddScoped<IDriverRepository, DriverRepository>();
-        services.AddScoped<IOrderRepository, OrderRepository>();
+        // UnitOfWork and all services are transient
+        services.AddTransient<UnitOfWork>();
 
-        services.AddScoped<IRepository<Address>, AddressRepository>();
-        services.AddScoped<IRepository<Tariff>, TariffRepository>();
-        services.AddScoped<IRepository<Transaction>, TransactionRepository>();
-
-        services.AddScoped<AutomobileRepository>();
-        services.AddScoped<ReportRepository>();
-
-        // Business logic (Services). DispatcherService is Singleton so it keeps the logged-in user state across the app
-        services.AddSingleton<DispatcherService>();
-
+        services.AddTransient<DispatcherService>();
         services.AddTransient<AddressService>();
         services.AddTransient<ClientService>();
         services.AddTransient<DriverService>();
@@ -75,7 +70,6 @@ public partial class App : Application
         services.AddTransient<TransactionService>();
         services.AddTransient<ReportService>();
 
-        // UI
         services.AddTransient<LoginViewModel>();
         services.AddTransient<MainViewModel>();
         services.AddTransient<CreateOrderViewModel>();

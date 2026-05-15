@@ -1,9 +1,10 @@
 ﻿using Microsoft.Data.SqlClient;
 using Domain.DTO;
+using Domain.Interfaces;
 
 namespace Infrastructure.Repositories;
 
-public class ReportRepository(DbConnectionFactory factory)
+public class ReportRepository(DbConnectionFactory factory) : IReportRepository
 {
     // Query 6.1 - List of cars and their drivers
     public List<AutoDriverReport> GetFleetReport()
@@ -73,7 +74,7 @@ public class ReportRepository(DbConnectionFactory factory)
         using var reader = cmd.ExecuteReader();
 
         if (reader.Read())
-            return new string("Dispatcher  with id: " + reader["dispatcherId"] + " with " + reader[" total "] + " orders");
+            return new string("Dispatcher  with id: " + reader["dispatcherId"] + " with " + reader["total"] + " orders");
        
         return null;
     }
