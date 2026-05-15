@@ -26,9 +26,11 @@ public class LoginViewModel(DispatcherService dispatcherService, IServiceProvide
     // Define the command for the Login button
     public ICommand LoginCommand => new RelayCommand(ExecuteLogin, CanExecuteLogin);
 
-    // Button is disabled if login is empty
+    // A flag for whether the Login button should be enabled
     private bool CanExecuteLogin(object? parameter) => !string.IsNullOrWhiteSpace(Login);
 
+
+    //Login itself logic, it will be called when the Login button is clicked
     private void ExecuteLogin(object? parameter)
     {
         var passwordBox = parameter as PasswordBox;
@@ -36,14 +38,14 @@ public class LoginViewModel(DispatcherService dispatcherService, IServiceProvide
 
         if (dispatcherService.Login(Login, password))
         {
-            // 1. Get the MainWindow from the DI container
+            // Get the MainWindow from the DI container
             var mainWindow = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
                 .GetRequiredService<MainWindow>(serviceProvider);
 
-            // 2. Show the new window
+            // Show the new window
             mainWindow.Show();
 
-            // 3. Close the current Login window
+            // Close the current Login window
             Application.Current.MainWindow.Close();
             Application.Current.MainWindow = mainWindow;
         }

@@ -53,10 +53,10 @@ public class CreateOrderViewModel : ViewModelBase
         set => SetProperty(ref _selectedTariff, value);
     }
 
-    public ICommand SaveCommand { get; }
-    public ICommand CancelCommand { get; }
+    public ICommand SaveOrderCommand { get; }
+    public ICommand CancelOrderCommand { get; }
 
-    public event Action? RequestClose;
+    public event Action? RequestCloseWindow;
 
     public CreateOrderViewModel(
         ClientService clientService,
@@ -71,8 +71,8 @@ public class CreateOrderViewModel : ViewModelBase
         _addressService = addressService;
         _dispatcherService = dispatcherService;
 
-        SaveCommand = new RelayCommand(_ => ExecuteSave(), _ => CanSave());
-        CancelCommand = new RelayCommand(_ => RequestClose?.Invoke());
+        SaveOrderCommand = new RelayCommand(_ => ExecuteSave(), _ => CanSave());
+        CancelOrderCommand = new RelayCommand(_ => RequestCloseWindow?.Invoke());
 
         LoadTariffs();
     }
@@ -84,6 +84,10 @@ public class CreateOrderViewModel : ViewModelBase
             AvailableTariffs.Add(t);
     }
 
+    /// <summary>
+    /// Checks if the form is valid and ready to be saved
+    /// </summary>
+    /// <returns>True if the form is valid, otherwise false</returns>
     private bool CanSave()
     {
         // Require phone, street names, house numbers, and a tariff
@@ -96,6 +100,9 @@ public class CreateOrderViewModel : ViewModelBase
                PassengersCount > 0;
     }
 
+    /// <summary>
+    /// Saves the order by creating or retrieving the client, resolving addresses, and creating the order in the system. Shows success or error messages accordingly.
+    /// </summary>
     private void ExecuteSave()
     {
         try
@@ -126,7 +133,7 @@ public class CreateOrderViewModel : ViewModelBase
                 Commentary);
 
             MessageBox.Show($"Order #{newOrder.Id} created successfully!", "Success");
-            RequestClose?.Invoke();
+            RequestCloseWindow?.Invoke();
         }
         catch (Exception ex)
         {

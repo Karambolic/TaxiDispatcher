@@ -19,7 +19,7 @@ public class MainViewModel : ViewModelBase
     private Order? _selectedOrder;
     private object? _reportData;
 
-    // For the date range report
+    // For the date range order report
     private DateTime _startDate = DateTime.Now.AddDays(-7); // Default range is last week
     private DateTime _endDate = DateTime.Now;
 
@@ -52,7 +52,7 @@ public class MainViewModel : ViewModelBase
     }
 
     // Commands
-    public ICommand RefreshCommand { get; }
+    public ICommand RefreshOrdersCommand { get; }
     public ICommand CreateOrderCommand { get; }
     public ICommand CancelOrderCommand { get; }
     public ICommand LogoutCommand { get; }
@@ -70,7 +70,7 @@ public class MainViewModel : ViewModelBase
         _clientService = clientService;
         _reportService = reportService;
 
-        RefreshCommand = new RelayCommand(_ => LoadOrders());
+        RefreshOrdersCommand = new RelayCommand(_ => LoadActiveOrders());
 
         CreateOrderCommand = new RelayCommand(_ => ExecuteOpenCreateOrder());
 
@@ -79,10 +79,10 @@ public class MainViewModel : ViewModelBase
         LogoutCommand = new RelayCommand(_ => ExecuteLogout());
 
         InitializeReportCommands();
-        LoadOrders();
+        LoadActiveOrders();
     }
 
-    private void LoadOrders()
+    private void LoadActiveOrders()
     {
         Orders.Clear();
         var data = _orderService.GetActiveOrders();
@@ -96,15 +96,17 @@ public class MainViewModel : ViewModelBase
     {
         var dialog = new CreateOrderWindow();
         dialog.ShowDialog(); // Open as modal dialog
-        LoadOrders(); // Refresh orders after creating (or not, anyway) a new one
+        LoadActiveOrders(); // Refresh orders after creating (or not, anyway) a new one
     }
 
     private void ExecuteCancel()
     {
-        if (SelectedOrder == null) return;
+        if (SelectedOrder == null)
+            return;
+
         _orderService.CancelOrder(SelectedOrder.Id);
         MessageBox.Show($"Order #{SelectedOrder.Id} canceled.");
-        LoadOrders();
+        LoadActiveOrders();
     }
 
     private void ExecuteLogout()
@@ -122,6 +124,7 @@ public class MainViewModel : ViewModelBase
 
             // Close current mainWindow
             Application.Current.MainWindow?.Close();
+            Application.Current.MainWindow = loginWindow;
         }
     }
 

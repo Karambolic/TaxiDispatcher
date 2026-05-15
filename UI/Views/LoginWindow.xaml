@@ -8,7 +8,7 @@
         Height="450" Width="400"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Background="AliceBlue">
+        Background="NavajoWhite">
 
     <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
         <Border Background="White" 

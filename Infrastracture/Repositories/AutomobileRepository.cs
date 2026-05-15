@@ -132,7 +132,7 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         return cmdAuto.ExecuteNonQuery() > 0;
     }
 
-    private Automobile MapReaderToAutomobile(SqlDataReader reader)
+    static private Automobile MapReaderToAutomobile(SqlDataReader reader)
     {
         // Determine if there is a driver linked in this row
         Driver? linkedDriver = null;
@@ -157,8 +157,9 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
             (string)reader["Model"],
             (int)reader["Year"],
             (int)reader["Capacity"],
-            (int)reader["Id"],
-            linkedDriver!
+            linkedDriver!,
+            (int)reader["Id"]
+            
         );
     }
 
@@ -170,7 +171,7 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
    /// call.</param>
    /// <returns>A list of Tariff objects representing the tariffs available for the specified automobile. The list is empty if no
    /// tariffs are available.</returns>
-    private List<Tariff> LoadAvailableTariffs(int automobileId, SqlConnection connection)
+    static private List<Tariff> LoadAvailableTariffs(int automobileId, SqlConnection connection)
     {
         var tariffs = new List<Tariff>();
         const string sql = @"
@@ -191,7 +192,7 @@ public class AutomobileRepository(DbConnectionFactory connectionFactory) : IRepo
         return tariffs;
     }
 
-    private void UpdateAvailableTariffs(Automobile entity, SqlConnection connection)
+    static private void UpdateAvailableTariffs(Automobile entity, SqlConnection connection)
     {
         const string sqlDelete = "DELETE FROM TariffAvailability WHERE automobileId = @aId";
         using var cmdDel = new SqlCommand(sqlDelete, connection);

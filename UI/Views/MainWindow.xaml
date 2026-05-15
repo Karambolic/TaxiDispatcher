@@ -7,7 +7,7 @@
         Title="Taxi dispatcher system - Orders management console" 
         Height="700" Width="1100"
         WindowStartupLocation="CenterScreen"
-        Background="AntiqueWhite">
+        Background="NavajoWhite">
 
     <Window.Resources>
         <Style x:Key="SidebarButtonStyle" TargetType="Button">
@@ -84,21 +84,21 @@
                     <Separator Margin="0,15"/>
 
                     <TextBlock Text="SQL REPORTS" FontWeight="Bold" Foreground="DarkOliveGreen" Margin="5,0,0,10" FontSize="12"/>
-                    <Button Content="6.1 Drivers and their autos" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[1]}"/>
-                    <Button Content="6.2 Clients with vodafone phone nums" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[2]}"/>
-                    <Button Content="6.3 Orders by period" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[3]}"/>
-                    <Button Content="6.4 Total clients count" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[4]}"/>
-                    <Button Content="6.5 Tariff average price" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[5]}"/>
-                    <Button Content="6.6 Most effective dispatcher" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[6]}"/>
-                    <Button Content="6.7 Max checks per client" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[7]}"/>
-                    <Button Content="6.8 Idle drivers" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[8]}"/>
-                    <Button Content="6.9 Tariff usage status" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[9]}"/>
+                    <Button Content="1 Drivers and their autos" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[1]}"/>
+                    <Button Content="2 Clients with vodafone phone nums" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[2]}"/>
+                    <Button Content="3 Orders by period" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[3]}"/>
+                    <Button Content="4 Total clients count" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[4]}"/>
+                    <Button Content="5 Tariff average price" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[5]}"/>
+                    <Button Content="6 Most effective dispatcher" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[6]}"/>
+                    <Button Content="7 Max checks per client" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[7]}"/>
+                    <Button Content="8 Idle drivers" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[8]}"/>
+                    <Button Content="9 Tariff usage status" Style="{StaticResource SidebarButtonStyle}" Command="{Binding ReportCommands[9]}"/>
                 </StackPanel>
             </ScrollViewer>
         </Border>
 
         <TabControl Margin="10" Background="Transparent" BorderThickness="0">
-            <TabItem Header="Live Dispatch Board">
+            <TabItem Header="Live dispatch board">
                 <Grid Background="White">
                     <DataGrid ItemsSource="{Binding Orders}" 
                               SelectedItem="{Binding SelectedOrder}"
