@@ -14,7 +14,7 @@ public abstract class ViewModelBase : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    // Check if the value is new, update the backing field and raise PropertyChanged
+    // Check if the value is new, update the backing field and raise PropertyChanged 
     protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
     {
         if (EqualityComparer<T>.Default.Equals(storage, value)) return false;

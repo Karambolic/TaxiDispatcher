@@ -1,17 +1,14 @@
-﻿
-using System.Windows;
+﻿using System.Windows;
+using UI.ViewModels;
 
+namespace UI.Views;
 
-namespace UI.Views
-{
-    /// <summary>
-    /// Interaction logic for CreateOrderWindow.xaml
-    /// </summary>
     public partial class CreateOrderWindow : Window
     {
-        public CreateOrderWindow()
+        public CreateOrderWindow(CreateOrderViewModel viewModel)
         {
             InitializeComponent();
+            this.DataContext = viewModel;
+            viewModel.RequestCloseWindow += () => this.Close();
         }
     }
-}

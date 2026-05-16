@@ -1,8 +1,8 @@
-﻿using BusinessLogic.Services;
-using Domain.Entities;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
+using BusinessLogic.Services;
+using Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using UI.Infrastructure;
 using UI.Views;
@@ -20,7 +20,7 @@ public class MainViewModel : ViewModelBase
     private Order? _selectedOrder;
     private object? _reportData;
 
-    private DateTime _startDate = DateTime.Now.AddDays(-7);
+    private DateTime _startDate = DateTime.Now.AddDays(-7); // Default range is last week
     private DateTime _endDate = DateTime.Now;
 
     public ObservableCollection<Order> Orders { get; } = new();
@@ -51,7 +51,7 @@ public class MainViewModel : ViewModelBase
         set => SetProperty(ref _endDate, value);
     }
 
-    // Commands
+    // Commands to be binded to UI buttons
     public ICommand RefreshOrdersCommand { get; }
     public ICommand CreateOrderCommand { get; }
     public ICommand CancelOrderCommand { get; }
@@ -75,7 +75,10 @@ public class MainViewModel : ViewModelBase
 
         RefreshOrdersCommand = new RelayCommand(_ =>
         {
-            try { LoadActiveOrders(); }
+            try
+            {
+                LoadActiveOrders();
+            }
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to load orders:\n{ex.Message}", "Error",
@@ -84,8 +87,15 @@ public class MainViewModel : ViewModelBase
         });
 
         CreateOrderCommand = new RelayCommand(_ => ExecuteOpenCreateOrder());
+
         CancelOrderCommand = new RelayCommand(_ => ExecuteCancel(), _ => SelectedOrder != null);
-        AssignDriverCommand = new RelayCommand(_ => ExecuteAssignDriver(), _ => SelectedOrder != null);
+
+        // Assign driver button is active ONLY if an order is selected AND its status is New
+        AssignDriverCommand = new RelayCommand(
+            _ => ExecuteAssignDriver(),
+            _ => SelectedOrder != null && SelectedOrder.Status == OrderStatus.New
+        );
+
         LogoutCommand = new RelayCommand(_ => ExecuteLogout());
 
         InitializeReportCommands();
@@ -102,9 +112,11 @@ public class MainViewModel : ViewModelBase
 
     private void ExecuteAssignDriver()
     {
-        if (SelectedOrder == null) return;
+        // Defensive check to protect against accidental execution
+        if (SelectedOrder == null || SelectedOrder.Status != OrderStatus.New)
+            return;
 
-        // Ge the Window and its VM from the DI container
+        // Get the Window and its VM from the DI container
         var viewModel = App.ServiceProvider.GetRequiredService<AssignDriverViewModel>();
         var dialog = new AssignDriverWindow(viewModel);
         dialog.Owner = Application.Current.MainWindow;
@@ -115,7 +127,7 @@ public class MainViewModel : ViewModelBase
             if (driver != null)
             {
                 _orderService.AssignDriverToOrder(SelectedOrder.Id, driver.Id);
-                MessageBox.Show($"Driver {driver.FirstName} assigned to Order #{SelectedOrder.Id}");
+                MessageBox.Show($"Driver {driver.FirstName} assigned to order #{SelectedOrder.Id}");
                 LoadActiveOrders();
             }
         }
@@ -124,13 +136,15 @@ public class MainViewModel : ViewModelBase
     private void ExecuteOpenCreateOrder()
     {
         var dialog = App.ServiceProvider.GetRequiredService<CreateOrderWindow>();
-        dialog.ShowDialog();
-        LoadActiveOrders();
+        dialog.ShowDialog(); // Open as modal dialog
+        LoadActiveOrders(); // Refresh orders after creating (or not, anyway) a new one
     }
 
     private void ExecuteCancel()
     {
-        if (SelectedOrder == null) return;
+        if (SelectedOrder == null)
+            return;
+
         _orderService.CancelOrder(SelectedOrder.Id);
         MessageBox.Show($"Order #{SelectedOrder.Id} canceled.");
         LoadActiveOrders();
@@ -144,8 +158,12 @@ public class MainViewModel : ViewModelBase
         if (result == MessageBoxResult.Yes)
         {
             _dispatcherService.Logout();
+
+            // Open login window
             var loginWindow = App.ServiceProvider.GetRequiredService<LoginWindow>();
             loginWindow.Show();
+
+            // Close current mainWindow
             Application.Current.MainWindow?.Close();
             Application.Current.MainWindow = loginWindow;
         }
